@@ -36,6 +36,24 @@ public class Pet {
 
     }
 
+    //GETTERS
+    public String getPetName() {
+        return this.petName;
+    }
+
+    public double getWeight() {
+        return this.weightInKg;
+    }
+
+    /*
+    MODIFIES: this.weightInKg
+    EFFECTS: change's the weight (kg) of a pet.
+     */
+    public void setWeight(
+            double newWeight) {
+        this.weightInKg = newWeight;
+    }
+
     /*
     MODIFIES: this
     EFFECTS: changes a pet's name (the petName field) to the inputted String argument.
@@ -44,38 +62,7 @@ public class Pet {
         this.petName = newName;
     }
 
-    //GETTERS
-    public double getWeight() {
-        return this.weightInKg;
-    }
-
-    public String getPetName() {
-        return this.petName;
-    }
-
-    //TODO add fn for outputting attributes of a pet
-
-    /*
-    EFFECTS: Prints all fields for a Pet.
-    */
-    public void printPetAttributes() {
-        System.out.println("\nName: " + this.petName);
-        System.out.println("\nWeight: " + this.getWeight());
-    }
-
-    /*
-    MODIFIES: this.weightInKg
-    EFFECTS: change's the weight (kg) of a pet.
-     */
-    public void setWeight(double newWeight) {
-        this.weightInKg = newWeight;
-    }
-
-
-
     //TODO add fn for calculating MER from weight
-
-
 
     /*
      MODIFIES: this

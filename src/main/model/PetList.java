@@ -7,7 +7,7 @@ public class PetList {
 
     /*EFFECTS: constructs a PetList with an empty myPets ArrayList.*/
     public PetList() {
-        myPets = new ArrayList<Pet>();
+        myPets = new ArrayList<>();
     }
 
     /*
@@ -25,12 +25,12 @@ public class PetList {
     }
 
     /*
-     EFFECTS: returns true if the string input matches the name of one of the Pet objects in PetList
+     EFFECTS: returns true if the string input matches the name of at least one Pet's name in PetList
      */
     public boolean duplicateName(String checkName) {
         boolean duplicate = false;
-        for (int i = 0; i < myPets.size(); i++) {
-            if (checkName.equalsIgnoreCase(myPets.get(i).getPetName())) {
+        for (Pet myPet : myPets) {
+            if (checkName.equalsIgnoreCase(myPet.getPetName())) {
                 duplicate = true;
                 break;
             }
@@ -52,26 +52,9 @@ public class PetList {
         return myPets.size();
     }
 
-    /*
-    EFFECTS: prints all pets with all of their fields to the user console.
-    TODO add test
-     */
-    public void printAllPets() {
-        for (int i = 0; i < myPets.size(); i++) {
-            //System.out.println(myPets.get(i).getPetName());
-            myPets.get(i).printPetAttributes();
-            System.out.println("\n---------------------------");
-        }
-    }
 
-    /*
-    EFFECTS: prints each pet's name to the user console.
-     */
-    public void printAllNames() {
-        for (int i = 0; i < myPets.size(); i++) {
-            System.out.println(myPets.get(i).getPetName());
-        }
-    }
+
+
 
 
 }

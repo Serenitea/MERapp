@@ -35,10 +35,10 @@ public class MerApp {
         System.out.println("\nGoodbye!");
     }
 
-   /*
-   MODIFIES: this
-    EFFECTS: processes user command from main menu of options
-    */
+    /*
+    MODIFIES: this
+     EFFECTS: processes user command from main menu of options
+     */
     private void processCommand(String command) {
         switch (command) {
             case "n":
@@ -96,7 +96,7 @@ public class MerApp {
                     + "\n---------------------------");
         } else {
             System.out.println("CURRENT PETS:");
-            newPetList.printAllPets();
+            printAllPets();
         }
     }
 
@@ -136,7 +136,7 @@ public class MerApp {
                 Pet newPet = createNewPet(petName);
                 System.out.println("\nNew pet added: " + newPet.getPetName());
                 newPetList.add(newPet);
-                newPet.printPetAttributes();
+                printPetFields(newPet);
                 keepgoing = false;
             }
         }
@@ -189,7 +189,7 @@ public class MerApp {
         for (String s : Arrays.asList("Enter the variable you would like to edit:", "\n name (n)", "\n weight (w)")) {
             System.out.println(s);
         }
-        
+
         String varToEdit = scanner.next();
         switch (varToEdit) {
             case "n":
@@ -202,7 +202,7 @@ public class MerApp {
             default:
                 throw new IllegalStateException("Unexpected value: " + varToEdit);
         }
-        petToEdit.printPetAttributes();
+        printPetFields(petToEdit);
         System.out.printf("Changes to %s saved.%n", petToEdit.getPetName());
     }
 
@@ -226,7 +226,22 @@ public class MerApp {
         petToEdit.setNewName(newPetName);
     }
 
+    /*
+    EFFECTS: Prints all fields for a Pet.
+    */
+    public void printPetFields(Pet petToPrint) {
+        System.out.println("\nName: " + petToPrint.getPetName());
+        System.out.println("\nWeight: " + petToPrint.getWeight());
+    }
 
-
+    /*
+    EFFECTS: prints all pets with all of their fields to the user console.
+    */
+    public void printAllPets() {
+        for (int i = 0; i < newPetList.getNumPets(); i++) {
+            Pet printPet = newPetList.getPetArray().get(i);
+            printPetFields(printPet);
+        }
+    }
 
 }
