@@ -10,8 +10,8 @@ and track their pet's weight progression over time. The obesity epidemic, affect
  nutritional needs and maintain healthy weights.
  
  ##User Stories for phase 1:
- - add a new pet with basic traits: name and weight.
- - view current list of pets.
+ - add a new pet with basic traits: name and weight. Duplicate names are not allowed (not case-sensitive).
+ - view the current list of pets.
  - Select and edit a pet's traits.
  - Remove a pet from the list of current pets.
   

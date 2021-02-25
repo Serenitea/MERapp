@@ -1,18 +1,13 @@
 package model;
 
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Date;
-import java.text.DateFormat;
-import java.util.Iterator;
-
 // Represents a cat or dog having a name and stored information relating to its energy requirements:
 // species, gender, neuter status, age in years, weight (kg), resting energy requirements, energy multiplicative factor,
 // BCS (body condition score)
 public class Pet {
-    protected String petName;
-    protected double weightInKg;
+    private String petName;
+    private double weightInKg;
+    private double mer;
+    private double dietCalPerKg;
 
     /*
      REQUIRES:
@@ -30,10 +25,11 @@ public class Pet {
                int bodyConditionScore,
                double energyFactor,
                int dietKCalPerKg*/
-    ) {
+               ) {
         this.petName = petName;
         this.weightInKg = weightInKg;
-
+        this.mer = MERcalc.findMER(weightInKg);
+        this.dietCalPerKg = 0;
     }
 
     //GETTERS
@@ -45,10 +41,14 @@ public class Pet {
         return this.weightInKg;
     }
 
+    public double getMer() {
+        return mer;
+    }
+
     /*
-    MODIFIES: this.weightInKg
-    EFFECTS: change's the weight (kg) of a pet.
-     */
+        MODIFIES: this.weightInKg
+        EFFECTS: change's the weight (kg) of a pet.
+         */
     public void setWeight(
             double newWeight) {
         this.weightInKg = newWeight;
@@ -61,8 +61,6 @@ public class Pet {
     public void setNewName(String newName) {
         this.petName = newName;
     }
-
-    //TODO add fn for calculating MER from weight
 
     /*
      MODIFIES: this
