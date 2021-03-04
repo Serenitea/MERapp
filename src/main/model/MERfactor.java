@@ -1,4 +1,5 @@
 package model;
+
 import java.lang.Math;
 
 public enum MERfactor {

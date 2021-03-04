@@ -1,13 +1,23 @@
 package model;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+/*import persistence.Writable;*/
+
 import java.util.ArrayList;
 
-public class PetList {
+/*
+Represents a user profile with a number of pets
+ */
+public class PetList /*implements Writable*/ {
     private ArrayList<Pet> myPets;
+    private String ownerName;
+
 
     /*EFFECTS: constructs a PetList with an empty myPets ArrayList.*/
     public PetList() {
-        myPets = new ArrayList<>();
+        this.myPets = new ArrayList<>();
+
     }
 
     /*
@@ -42,19 +52,47 @@ public class PetList {
     GETTER
      */
     public ArrayList<Pet> getPetArray() {
-        return myPets;
+        return this.myPets;
+
     }
 
     /*
     EFFECTS: returns number of Pet objects in the myPets ArrayList of a PetList.
     */
     public int getNumPets() {
-        return myPets.size();
+        return this.myPets.size();
+    }
+
+    /*
+    EFFECTS: returns owner name field
+     */
+    public String getOwnerName() {
+        return this.ownerName;
+    }
+
+    /*
+    MODIFIES: this
+    EFFECTS: sets the ownerName field to the inputted String
+     */
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
     }
 
 
+    public JSONObject toJson() {
+        JSONObject json = new JSONObject();
+        json.put("ownername", this.ownerName);
+        json.put("pets", petsToJson());
+        return json;
+    }
 
+    private JSONArray petsToJson() {
+        JSONArray jsonArray = new JSONArray();
 
-
+        for (Pet pet : this.myPets) {
+            jsonArray.put(pet.toJson());
+        }
+        return jsonArray;
+    }
 
 }
