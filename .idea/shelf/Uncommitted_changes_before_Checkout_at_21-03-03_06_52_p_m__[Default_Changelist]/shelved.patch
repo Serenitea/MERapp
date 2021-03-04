@@ -1,0 +1,393 @@
+Index: README.md
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># Pet Food Calculator\r\n\r\n## Weight Management and Feeding Calculator for Cats & Dogs\r\n\r\nGiven the weight, age, and lifestyle needs of a cat or dog and the nutritional density of their diets, \r\nthis application will suggest a daily volume or weight to feed that is appropriate for maintaining their weight. \r\nIt will guide pet owners in long-term weight management by letting owners set a target weight \r\nand track their pet's weight progression over time. The obesity epidemic, affecting over half of cats and dogs in NA,\r\n is a major health concern in small animal medicine. This application can empower pet owners to understand their pet's\r\n nutritional needs and maintain healthy weights.\r\n \r\n ##User Stories for phase 1:\r\n - add a new pet with basic traits: name and weight. Duplicate names are not allowed (not case-sensitive).\r\n - view the current list of pets.\r\n - Select and edit a pet's traits.\r\n - Remove a pet from the list of current pets.\r\n  \r\n \r\n### *Todo wishlist:*\r\n - more traits for pets - e.g. species, gender, lifestyle\r\n - track a pet's current weight with an attached date\r\n - *feeding history*\r\n - *user profiles*\r\n - *edit weight history*\r\n - *more options for diet caloric measurements - kcalPerKg*\r\n - *imperial measurement conversions*\r\n - *expand on diet traits - e.g. fields for brand, wet/dry, etc.*\r\n - add the current diet's caloric count and output recommended feeding amount\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- README.md	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ README.md	(date 1614660902242)
+@@ -14,7 +14,11 @@
+  - view the current list of pets.
+  - Select and edit a pet's traits.
+  - Remove a pet from the list of current pets.
+-  
++ ##User Stories for phase 2:
++ - prompt to save current Pet to json file when 
++ exiting from individual Pet menu back to Main Menu
++ - upon application launch, option to load all pets from json file or start new account
++ - prompt to save data upon exiting the program
+  
+ ### *Todo wishlist:*
+  - more traits for pets - e.g. species, gender, lifestyle
+Index: src/main/ui/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ui;\r\n\r\npublic class Main {\r\n    public static void main(String[] args) {\r\n        new MERApp();\r\n\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/ui/Main.java	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ src/main/ui/Main.java	(date 1614654588437)
+@@ -2,7 +2,7 @@
+ 
+ public class Main {
+     public static void main(String[] args) {
+-        new MERApp();
++        new MERapp();
+ 
+     }
+ }
+Index: src/main/persistence/JsonReader.java
+===================================================================
+--- src/main/persistence/JsonReader.java	(date 1614775835708)
++++ src/main/persistence/JsonReader.java	(date 1614775835708)
+@@ -0,0 +1,77 @@
++package persistence;
++
++/*import model.Category;
++import model.pet;
++import model.PetList;*/
++
++import model.Pet;
++import model.PetList;
++import org.json.JSONArray;
++import org.json.JSONObject;
++
++import java.io.IOException;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Paths;
++import java.util.stream.Stream;
++
++// Represents a reader that reads PetList from JSON data stored in file
++public class JsonReader {
++    private String source;
++
++    // EFFECTS: constructs reader to read from source file
++    public JsonReader(String source) {
++        this.source = source;
++    }
++
++    // EFFECTS: reads PetList from file and returns it;
++    // throws IOException if an error occurs reading data from file
++    public PetList read() throws IOException {
++        String jsonData = readFile(source);
++        JSONObject jsonObject = new JSONObject(jsonData);
++        return parsePetList(jsonObject);
++    }
++
++    // EFFECTS: reads source file as string and returns it
++    private String readFile(String source) throws IOException {
++        StringBuilder contentBuilder = new StringBuilder();
++
++        try (Stream<String> stream = Files.lines(Paths.get(source), StandardCharsets.UTF_8)) {
++            stream.forEach(contentBuilder::append);
++        }
++
++        return contentBuilder.toString();
++    }
++
++    // EFFECTS: parses PetList from JSON object and returns it
++    private PetList parsePetList(JSONObject jsonObject) {
++        PetList petList = new PetList();
++        String name = jsonObject.getString("ownername");
++        petList.setOwnerName(name);
++        addPets(petList, jsonObject);
++        return petList;
++    }
++
++    // MODIFIES: petList
++    // EFFECTS: parses Pets from JSON object and adds them to PetList
++    private void addPets(PetList petList, JSONObject jsonObject) {
++        JSONArray jsonArray = jsonObject.getJSONArray("pets");
++        for (Object json : jsonArray) {
++            JSONObject nextPet = (JSONObject) json;
++            addPet(petList, nextPet);
++        }
++    }
++
++    // MODIFIES: petList
++    // EFFECTS: parses pet from JSON object and adds it to PetList
++    private void addPet(PetList petList, JSONObject jsonObject) {
++        String name = jsonObject.getString("pet name");
++        double weight = jsonObject.getDouble("weight");
++        Pet pet = new Pet(name, weight);
++        /*try {
++            double mer = jsonObject.getDouble("MER");
++        } catch (NullPointerException e) {
++        }*/
++        petList.add(pet);
++    }
++}
+Index: src/test/model/MyModelTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package model;\r\n\r\nimport org.junit.jupiter.api.BeforeEach;\r\nimport org.junit.jupiter.api.Test;\r\n\r\nimport java.io.ByteArrayOutputStream;\r\nimport java.io.PrintStream;\r\n\r\nimport static org.junit.jupiter.api.Assertions.assertEquals;\r\nimport static org.junit.jupiter.api.Assertions.assertFalse;\r\nimport static org.junit.jupiter.api.Assertions.assertTrue;\r\n\r\n/*\r\n        testDiet1 = new Diet(\"Rayne Feline Kangaroo Canned\", 1090);\r\n        testDiet2 = new Diet(\"Hill's Canine t/d dry\", 3504);\r\n */\r\n\r\n\r\n//Unit tests for Pet\r\nclass PetTest {\r\n    // test:\r\n    private Pet testPet1;\r\n    private Pet testPet2;\r\n    private PetList testPetList;\r\n\r\n\r\n    //initialize 2 pets for testing\r\n    @BeforeEach\r\n    public void setUp() {\r\n        testPet1 = new Pet(\"Pretzl\",\r\n                19.5);\r\n        testPet2 = new Pet(\"Peach\",\r\n                40);\r\n    }\r\n\r\n    @Test\r\n    public void testNames() {\r\n        assertEquals(\"Pretzl\", testPet1.getPetName());\r\n        testPet1.setNewName(\"Poof\");\r\n        assertEquals(\"Poof\", testPet1.getPetName());\r\n\r\n        assertEquals(\"Peach\", testPet2.getPetName());\r\n        testPet2.setNewName(\"Pink\");\r\n        assertEquals(\"Pink\", testPet2.getPetName());\r\n    }\r\n\r\n    @Test\r\n    public void testWeights() {\r\n        assertEquals(19.5, testPet1.getWeight());\r\n        assertEquals(40, testPet2.getWeight());\r\n    }\r\n\r\n    @Test\r\n    public void addWeightTest() {\r\n        testPet1.setWeight(15.0);\r\n        assertEquals(15.0, testPet1.getWeight());\r\n\r\n        testPet2.setWeight(17.4);\r\n        assertEquals(17.4, testPet2.getWeight());\r\n    }\r\n\r\n    @Test\r\n    public void testChangeName() {\r\n        testPet1.setNewName(\"Pretzel\");\r\n        assertEquals(\"Pretzel\", testPet1.getPetName());\r\n        testPet2.setNewName(\"Peaches\");\r\n        assertEquals(\"Peaches\", testPet2.getPetName());\r\n    }\r\n\r\n\r\n}\r\n\r\nclass PetListTest {\r\n    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();\r\n    // test:\r\n    private Pet testPet1;\r\n    private Pet testPet2;\r\n    private PetList testPetList0;\r\n    private PetList testPetList1;\r\n    private PetList testPetList2;\r\n\r\n    //initialize 2 pets of testing\r\n    @BeforeEach\r\n    public void setUp() {\r\n        testPet1 = new Pet(\"Pretzl\",\r\n                19.5);\r\n        testPet2 = new Pet(\"Peach\",\r\n                40);\r\n        testPetList0 = new PetList();\r\n        testPetList1 = new PetList();\r\n        testPetList1.add(testPet1);\r\n        testPetList2 = new PetList();\r\n        testPetList2.add(testPet1);\r\n        testPetList2.add(testPet2);\r\n        System.setOut(new PrintStream(outContent));\r\n    }\r\n\r\n\r\n    @Test\r\n    public void testDuplicateName() {\r\n        assertTrue(testPetList1.duplicateName(\"pretzl\"));\r\n        assertFalse(testPetList1.duplicateName(\"peaches\"));\r\n    }\r\n\r\n\r\n    @Test\r\n    //tests adding, removing, printing, getting size from PetList\r\n    public void testAddPet() {\r\n        testPetList0.add(testPet1);\r\n        assertEquals(1, testPetList0.getPetArray().size());\r\n        assertEquals(1, testPetList0.getNumPets());\r\n\r\n        testPetList0.add(testPet2);\r\n        assertEquals(2, testPetList0.getPetArray().size());\r\n        assertEquals(2, testPetList0.getNumPets());\r\n\r\n        testPetList0.remove(testPet1);\r\n        assertEquals(1, testPetList0.getPetArray().size());\r\n        assertEquals(1, testPetList0.getNumPets());\r\n    }\r\n\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/model/MyModelTest.java	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ src/test/model/MyModelTest.java	(date 1614826128144)
+@@ -3,12 +3,7 @@
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ 
+-import java.io.ByteArrayOutputStream;
+-import java.io.PrintStream;
+-
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+-import static org.junit.jupiter.api.Assertions.assertFalse;
+-import static org.junit.jupiter.api.Assertions.assertTrue;
+ 
+ /*
+         testDiet1 = new Diet("Rayne Feline Kangaroo Canned", 1090);
+@@ -70,53 +65,3 @@
+ 
+ }
+ 
+-class PetListTest {
+-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+-    // test:
+-    private Pet testPet1;
+-    private Pet testPet2;
+-    private PetList testPetList0;
+-    private PetList testPetList1;
+-    private PetList testPetList2;
+-
+-    //initialize 2 pets of testing
+-    @BeforeEach
+-    public void setUp() {
+-        testPet1 = new Pet("Pretzl",
+-                19.5);
+-        testPet2 = new Pet("Peach",
+-                40);
+-        testPetList0 = new PetList();
+-        testPetList1 = new PetList();
+-        testPetList1.add(testPet1);
+-        testPetList2 = new PetList();
+-        testPetList2.add(testPet1);
+-        testPetList2.add(testPet2);
+-        System.setOut(new PrintStream(outContent));
+-    }
+-
+-
+-    @Test
+-    public void testDuplicateName() {
+-        assertTrue(testPetList1.duplicateName("pretzl"));
+-        assertFalse(testPetList1.duplicateName("peaches"));
+-    }
+-
+-
+-    @Test
+-    //tests adding, removing, printing, getting size from PetList
+-    public void testAddPet() {
+-        testPetList0.add(testPet1);
+-        assertEquals(1, testPetList0.getPetArray().size());
+-        assertEquals(1, testPetList0.getNumPets());
+-
+-        testPetList0.add(testPet2);
+-        assertEquals(2, testPetList0.getPetArray().size());
+-        assertEquals(2, testPetList0.getNumPets());
+-
+-        testPetList0.remove(testPet1);
+-        assertEquals(1, testPetList0.getPetArray().size());
+-        assertEquals(1, testPetList0.getNumPets());
+-    }
+-
+-}
+\ No newline at end of file
+Index: Project-Starter.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<module type=\"JAVA_MODULE\" version=\"4\">\r\n  <component name=\"CheckStyle-IDEA-Module\">\r\n    <option name=\"configuration\">\r\n      <map />\r\n    </option>\r\n  </component>\r\n  <component name=\"NewModuleRootManager\" inherit-compiler-output=\"true\">\r\n    <exclude-output />\r\n    <content url=\"file://$MODULE_DIR$\">\r\n      <sourceFolder url=\"file://$MODULE_DIR$/src/test\" isTestSource=\"true\" />\r\n      <sourceFolder url=\"file://$MODULE_DIR$/src/main\" isTestSource=\"false\" />\r\n    </content>\r\n    <orderEntry type=\"inheritedJdk\" />\r\n    <orderEntry type=\"sourceFolder\" forTests=\"false\" />\r\n    <orderEntry type=\"module-library\" scope=\"TEST\">\r\n      <library name=\"JUnit5.4\">\r\n        <CLASSES>\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-jupiter-5.4.2.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-jupiter-api-5.4.2.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/apiguardian-api-1.0.0.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/opentest4j-1.1.1.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-platform-commons-1.4.2.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-jupiter-params-5.4.2.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-jupiter-engine-5.4.2.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-platform-engine-1.4.2.jar!/\" />\r\n        </CLASSES>\r\n        <JAVADOC />\r\n        <SOURCES />\r\n      </library>\r\n    </orderEntry>\r\n  </component>\r\n</module>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Project-Starter.iml	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ Project-Starter.iml	(date 1614761040991)
+@@ -29,5 +29,15 @@
+         <SOURCES />
+       </library>
+     </orderEntry>
++    <orderEntry type="library" name="json-20200518" level="application" />
++    <orderEntry type="module-library">
++      <library>
++        <CLASSES>
++          <root url="jar://$MODULE_DIR$/lib/annotations-19.0.0.jar!/" />
++        </CLASSES>
++        <JAVADOC />
++        <SOURCES />
++      </library>
++    </orderEntry>
+   </component>
+ </module>
+\ No newline at end of file
+Index: src/test/TestDiag.puml
+===================================================================
+--- src/test/TestDiag.puml	(date 1614820655751)
++++ src/test/TestDiag.puml	(date 1614820655751)
+@@ -0,0 +1,16 @@
++@startuml
++'https://plantuml.com/sequence-diagram
++
++[*] --> runApp
++
++state runApp{
++    noProfile --> keepGoing
++    keepGoing: introMenu();
++}
++
++state saveJson {
++    saveJson: check name not null
++    nameNull: ask for name
++}
++
++@enduml
+\ No newline at end of file
+Index: src/main/persistence/Writable
+===================================================================
+--- src/main/persistence/Writable	(date 1614773243586)
++++ src/main/persistence/Writable	(date 1614773243586)
+@@ -0,0 +1,8 @@
++package persistence;
++
++import org.json.JSONObject;
++
++public interface Writable {
++    // EFFECTS: returns this as JSON object
++    JSONObject toJson();
++}
+Index: src/main/persistence/JsonWriter.java
+===================================================================
+--- src/main/persistence/JsonWriter.java	(date 1614768667396)
++++ src/main/persistence/JsonWriter.java	(date 1614768667396)
+@@ -0,0 +1,45 @@
++package persistence;
++
++import model.PetList;
++import org.json.JSONObject;
++
++
++import java.io.*;
++
++// Represents a writer that writes JSON representation of PetList to file
++public class JsonWriter {
++    private static final int TAB = 4;
++    private PrintWriter writer;
++    private String destination;
++
++    // EFFECTS: constructs writer to write to destination file
++    public JsonWriter(String destination) {
++        this.destination = destination;
++    }
++
++    // MODIFIES: this
++    // EFFECTS: opens writer; throws FileNotFoundException if destination file cannot
++    // be opened for writing
++    public void open() throws FileNotFoundException {
++        writer = new PrintWriter(new File(destination));
++    }
++
++    // MODIFIES: this
++    // EFFECTS: writes JSON representation of PetList to file
++    public void write(PetList petList) {
++        JSONObject json = petList.toJson();
++        saveToFile(json.toString(TAB));
++    }
++
++    // MODIFIES: this
++    // EFFECTS: closes writer
++    public void close() {
++        writer.close();
++    }
++
++    // MODIFIES: this
++    // EFFECTS: writes string to file
++    private void saveToFile(String json) {
++        writer.print(json);
++    }
++}
+Index: src/test/persistence/JsonWriterTest.java
+===================================================================
+--- src/test/persistence/JsonWriterTest.java	(date 1614826086173)
++++ src/test/persistence/JsonWriterTest.java	(date 1614826086173)
+@@ -0,0 +1,4 @@
++package persistence;
++
++public class JsonWriterTest {
++}
+Index: src/test/persistence/JsonReaderTest.java
+===================================================================
+--- src/test/persistence/JsonReaderTest.java	(date 1614826086166)
++++ src/test/persistence/JsonReaderTest.java	(date 1614826086166)
+@@ -0,0 +1,4 @@
++package persistence;
++
++public class JsonReaderTest {
++}
+Index: src/test/model/PetListTest.java
+===================================================================
+--- src/test/model/PetListTest.java	(date 1614826128135)
++++ src/test/model/PetListTest.java	(date 1614826128135)
+@@ -0,0 +1,60 @@
++package model;
++
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++
++import java.io.ByteArrayOutputStream;
++import java.io.PrintStream;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class PetListTest {
++    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
++    // test:
++    private Pet testPet1;
++    private Pet testPet2;
++    private PetList testPetList0;
++    private PetList testPetList1;
++    private PetList testPetList2;
++
++    //initialize 2 pets of testing
++    @BeforeEach
++    public void setUp() {
++        testPet1 = new Pet("Pretzl",
++                19.5);
++        testPet2 = new Pet("Peach",
++                40);
++        testPetList0 = new PetList();
++        testPetList1 = new PetList();
++        testPetList1.add(testPet1);
++        testPetList2 = new PetList();
++        testPetList2.add(testPet1);
++        testPetList2.add(testPet2);
++        System.setOut(new PrintStream(outContent));
++    }
++
++
++    @Test
++    public void testDuplicateName() {
++        assertTrue(testPetList1.duplicateName("pretzl"));
++        assertFalse(testPetList1.duplicateName("peaches"));
++    }
++
++
++    @Test
++    //tests adding, removing, printing, getting size from PetList
++    public void testAddPet() {
++        testPetList0.add(testPet1);
++        assertEquals(1, testPetList0.getPetArray().size());
++        assertEquals(1, testPetList0.getNumPets());
++
++        testPetList0.add(testPet2);
++        assertEquals(2, testPetList0.getPetArray().size());
++        assertEquals(2, testPetList0.getNumPets());
++
++        testPetList0.remove(testPet1);
++        assertEquals(1, testPetList0.getPetArray().size());
++        assertEquals(1, testPetList0.getNumPets());
++    }
++
++}

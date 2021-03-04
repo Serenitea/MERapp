@@ -1,0 +1,1189 @@
+Index: README.md
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># Pet Food Calculator\r\n\r\n## Weight Management and Feeding Calculator for Cats & Dogs\r\n\r\nGiven the weight, age, and lifestyle needs of a cat or dog and the nutritional density of their diets, \r\nthis application will suggest a daily volume or weight to feed that is appropriate for maintaining their weight. \r\nIt will guide pet owners in long-term weight management by letting owners set a target weight \r\nand track their pet's weight progression over time. The obesity epidemic, affecting over half of cats and dogs in NA,\r\n is a major health concern in small animal medicine. This application can empower pet owners to understand their pet's\r\n nutritional needs and maintain healthy weights.\r\n \r\n ##User Stories for phase 1:\r\n - add a new pet with basic traits: name and weight. Duplicate names are not allowed (not case-sensitive).\r\n - view the current list of pets.\r\n - Select and edit a pet's traits.\r\n - Remove a pet from the list of current pets.\r\n  \r\n \r\n### *Todo wishlist:*\r\n - more traits for pets - e.g. species, gender, lifestyle\r\n - track a pet's current weight with an attached date\r\n - *feeding history*\r\n - *user profiles*\r\n - *edit weight history*\r\n - *more options for diet caloric measurements - kcalPerKg*\r\n - *imperial measurement conversions*\r\n - *expand on diet traits - e.g. fields for brand, wet/dry, etc.*\r\n - add the current diet's caloric count and output recommended feeding amount\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- README.md	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ README.md	(date 1614660902242)
+@@ -14,7 +14,11 @@
+  - view the current list of pets.
+  - Select and edit a pet's traits.
+  - Remove a pet from the list of current pets.
+-  
++ ##User Stories for phase 2:
++ - prompt to save current Pet to json file when 
++ exiting from individual Pet menu back to Main Menu
++ - upon application launch, option to load all pets from json file or start new account
++ - prompt to save data upon exiting the program
+  
+ ### *Todo wishlist:*
+  - more traits for pets - e.g. species, gender, lifestyle
+Index: src/main/ui/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ui;\r\n\r\npublic class Main {\r\n    public static void main(String[] args) {\r\n        new MERApp();\r\n\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/ui/Main.java	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ src/main/ui/Main.java	(date 1614654588437)
+@@ -2,7 +2,7 @@
+ 
+ public class Main {
+     public static void main(String[] args) {
+-        new MERApp();
++        new MERapp();
+ 
+     }
+ }
+Index: src/main/model/PetList.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package model;\r\n\r\nimport java.util.ArrayList;\r\n\r\npublic class PetList {\r\n    private ArrayList<Pet> myPets;\r\n\r\n    /*EFFECTS: constructs a PetList with an empty myPets ArrayList.*/\r\n    public PetList() {\r\n        myPets = new ArrayList<>();\r\n    }\r\n\r\n    /*\r\n    MODIFIES: this\r\n    EFFECTS: adds an inputted Pet to the myPets ArrayList.\r\n     */\r\n    public void add(Pet petToAdd) {\r\n        myPets.add(petToAdd);\r\n    }\r\n\r\n    /*MODIFIES: this\r\n    EFFECTS: removes an inputted Pet to the myPets ArrayList.*/\r\n    public void remove(Pet petToRemove) {\r\n        myPets.remove(petToRemove);\r\n    }\r\n\r\n    /*\r\n     EFFECTS: returns true if the string input matches the name of at least one Pet's name in PetList\r\n     */\r\n    public boolean duplicateName(String checkName) {\r\n        boolean duplicate = false;\r\n        for (Pet myPet : myPets) {\r\n            if (checkName.equalsIgnoreCase(myPet.getPetName())) {\r\n                duplicate = true;\r\n                break;\r\n            }\r\n        }\r\n        return duplicate;\r\n    }\r\n\r\n    /*\r\n    GETTER\r\n     */\r\n    public ArrayList<Pet> getPetArray() {\r\n        return myPets;\r\n    }\r\n\r\n    /*\r\n    EFFECTS: returns number of Pet objects in the myPets ArrayList of a PetList.\r\n    */\r\n    public int getNumPets() {\r\n        return myPets.size();\r\n    }\r\n\r\n\r\n\r\n\r\n\r\n\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/model/PetList.java	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ src/main/model/PetList.java	(date 1614775835714)
+@@ -1,13 +1,22 @@
+ package model;
+ 
++import org.json.JSONArray;
++import org.json.JSONObject;
++/*import persistence.Writable;*/
++
+ import java.util.ArrayList;
+ 
+-public class PetList {
++/*
++Represents a user profile with a number of pets
++ */
++public class PetList /*implements Writable*/ {
+     private ArrayList<Pet> myPets;
++    private String ownerName;
++
+ 
+     /*EFFECTS: constructs a PetList with an empty myPets ArrayList.*/
+     public PetList() {
+-        myPets = new ArrayList<>();
++        this.myPets = new ArrayList<>();
+     }
+ 
+     /*
+@@ -42,19 +51,45 @@
+     GETTER
+      */
+     public ArrayList<Pet> getPetArray() {
+-        return myPets;
++        return this.myPets;
+     }
+ 
+     /*
+     EFFECTS: returns number of Pet objects in the myPets ArrayList of a PetList.
+     */
+     public int getNumPets() {
+-        return myPets.size();
++        return this.myPets.size();
+     }
+ 
++    /*
++    EFFECTS: returns owner name field
++     */
++    public String getOwnerName() {
++        return this.ownerName;
++    }
+ 
++    /*
++    MODIFIES: this
++    EFFECTS: sets the ownerName field to the inputted String
++     */
++    public void setOwnerName(String ownerName) {
++        this.ownerName = ownerName;
++    }
+ 
+ 
++    public JSONObject toJson() {
++        JSONObject json = new JSONObject();
++        json.put("ownername", this.ownerName);
++        json.put("pets", petsToJson());
++        return json;
++    }
+ 
++    private JSONArray petsToJson() {
++        JSONArray jsonArray = new JSONArray();
+ 
++        for (Pet pet : this.myPets) {
++            jsonArray.put(pet.toJson());
++        }
++        return jsonArray;
++    }
+ }
+Index: src/main/model/MERfactor.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package model;\r\nimport java.lang.Math;\r\n\r\npublic enum MERfactor {\r\n    ADULTNEUTERED(1.6, 1.6),\r\n    ADULTINTACT(1.8, 1.8),\r\n    INACTIVE(1.2, 1.4),\r\n    WEIGHTLOSS(1.0,1.0),\r\n    WEIGHTGAIN(1.2, 1.8),\r\n    ACTIVE(2, 5),\r\n    YOUNGPUPPY(3, 3),\r\n    OLDPUPPY(2, 2);\r\n\r\n\r\n    private final double lowFactor;\r\n    private final double highFactor;\r\n\r\n\r\n    MERfactor(double minFactor, double maxFactor) {\r\n        this.lowFactor = minFactor;\r\n        this.highFactor = maxFactor;\r\n    }\r\n\r\n    public double getLowFactor() {\r\n        return lowFactor;\r\n    }\r\n\r\n    public double getHighFactor() {\r\n        return highFactor;\r\n    }\r\n\r\n    public double estFactor() {\r\n        return (lowFactor + highFactor) / 2;\r\n    }\r\n\r\n\r\n\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/model/MERfactor.java	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ src/main/model/MERfactor.java	(date 1614654588429)
+@@ -1,4 +1,5 @@
+ package model;
++
+ import java.lang.Math;
+ 
+ public enum MERfactor {
+Index: src/main/persistence/JsonReader.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/persistence/JsonReader.java	(date 1614775835708)
++++ src/main/persistence/JsonReader.java	(date 1614775835708)
+@@ -0,0 +1,77 @@
++package persistence;
++
++/*import model.Category;
++import model.pet;
++import model.PetList;*/
++
++import model.Pet;
++import model.PetList;
++import org.json.JSONArray;
++import org.json.JSONObject;
++
++import java.io.IOException;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Paths;
++import java.util.stream.Stream;
++
++// Represents a reader that reads PetList from JSON data stored in file
++public class JsonReader {
++    private String source;
++
++    // EFFECTS: constructs reader to read from source file
++    public JsonReader(String source) {
++        this.source = source;
++    }
++
++    // EFFECTS: reads PetList from file and returns it;
++    // throws IOException if an error occurs reading data from file
++    public PetList read() throws IOException {
++        String jsonData = readFile(source);
++        JSONObject jsonObject = new JSONObject(jsonData);
++        return parsePetList(jsonObject);
++    }
++
++    // EFFECTS: reads source file as string and returns it
++    private String readFile(String source) throws IOException {
++        StringBuilder contentBuilder = new StringBuilder();
++
++        try (Stream<String> stream = Files.lines(Paths.get(source), StandardCharsets.UTF_8)) {
++            stream.forEach(contentBuilder::append);
++        }
++
++        return contentBuilder.toString();
++    }
++
++    // EFFECTS: parses PetList from JSON object and returns it
++    private PetList parsePetList(JSONObject jsonObject) {
++        PetList petList = new PetList();
++        String name = jsonObject.getString("ownername");
++        petList.setOwnerName(name);
++        addPets(petList, jsonObject);
++        return petList;
++    }
++
++    // MODIFIES: petList
++    // EFFECTS: parses Pets from JSON object and adds them to PetList
++    private void addPets(PetList petList, JSONObject jsonObject) {
++        JSONArray jsonArray = jsonObject.getJSONArray("pets");
++        for (Object json : jsonArray) {
++            JSONObject nextPet = (JSONObject) json;
++            addPet(petList, nextPet);
++        }
++    }
++
++    // MODIFIES: petList
++    // EFFECTS: parses pet from JSON object and adds it to PetList
++    private void addPet(PetList petList, JSONObject jsonObject) {
++        String name = jsonObject.getString("pet name");
++        double weight = jsonObject.getDouble("weight");
++        Pet pet = new Pet(name, weight);
++        /*try {
++            double mer = jsonObject.getDouble("MER");
++        } catch (NullPointerException e) {
++        }*/
++        petList.add(pet);
++    }
++}
+Index: src/test/model/MyModelTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package model;\r\n\r\nimport org.junit.jupiter.api.BeforeEach;\r\nimport org.junit.jupiter.api.Test;\r\n\r\nimport java.io.ByteArrayOutputStream;\r\nimport java.io.PrintStream;\r\n\r\nimport static org.junit.jupiter.api.Assertions.assertEquals;\r\nimport static org.junit.jupiter.api.Assertions.assertFalse;\r\nimport static org.junit.jupiter.api.Assertions.assertTrue;\r\n\r\n/*\r\n        testDiet1 = new Diet(\"Rayne Feline Kangaroo Canned\", 1090);\r\n        testDiet2 = new Diet(\"Hill's Canine t/d dry\", 3504);\r\n */\r\n\r\n\r\n//Unit tests for Pet\r\nclass PetTest {\r\n    // test:\r\n    private Pet testPet1;\r\n    private Pet testPet2;\r\n    private PetList testPetList;\r\n\r\n\r\n    //initialize 2 pets for testing\r\n    @BeforeEach\r\n    public void setUp() {\r\n        testPet1 = new Pet(\"Pretzl\",\r\n                19.5);\r\n        testPet2 = new Pet(\"Peach\",\r\n                40);\r\n    }\r\n\r\n    @Test\r\n    public void testNames() {\r\n        assertEquals(\"Pretzl\", testPet1.getPetName());\r\n        testPet1.setNewName(\"Poof\");\r\n        assertEquals(\"Poof\", testPet1.getPetName());\r\n\r\n        assertEquals(\"Peach\", testPet2.getPetName());\r\n        testPet2.setNewName(\"Pink\");\r\n        assertEquals(\"Pink\", testPet2.getPetName());\r\n    }\r\n\r\n    @Test\r\n    public void testWeights() {\r\n        assertEquals(19.5, testPet1.getWeight());\r\n        assertEquals(40, testPet2.getWeight());\r\n    }\r\n\r\n    @Test\r\n    public void addWeightTest() {\r\n        testPet1.setWeight(15.0);\r\n        assertEquals(15.0, testPet1.getWeight());\r\n\r\n        testPet2.setWeight(17.4);\r\n        assertEquals(17.4, testPet2.getWeight());\r\n    }\r\n\r\n    @Test\r\n    public void testChangeName() {\r\n        testPet1.setNewName(\"Pretzel\");\r\n        assertEquals(\"Pretzel\", testPet1.getPetName());\r\n        testPet2.setNewName(\"Peaches\");\r\n        assertEquals(\"Peaches\", testPet2.getPetName());\r\n    }\r\n\r\n\r\n}\r\n\r\nclass PetListTest {\r\n    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();\r\n    // test:\r\n    private Pet testPet1;\r\n    private Pet testPet2;\r\n    private PetList testPetList0;\r\n    private PetList testPetList1;\r\n    private PetList testPetList2;\r\n\r\n    //initialize 2 pets of testing\r\n    @BeforeEach\r\n    public void setUp() {\r\n        testPet1 = new Pet(\"Pretzl\",\r\n                19.5);\r\n        testPet2 = new Pet(\"Peach\",\r\n                40);\r\n        testPetList0 = new PetList();\r\n        testPetList1 = new PetList();\r\n        testPetList1.add(testPet1);\r\n        testPetList2 = new PetList();\r\n        testPetList2.add(testPet1);\r\n        testPetList2.add(testPet2);\r\n        System.setOut(new PrintStream(outContent));\r\n    }\r\n\r\n\r\n    @Test\r\n    public void testDuplicateName() {\r\n        assertTrue(testPetList1.duplicateName(\"pretzl\"));\r\n        assertFalse(testPetList1.duplicateName(\"peaches\"));\r\n    }\r\n\r\n\r\n    @Test\r\n    //tests adding, removing, printing, getting size from PetList\r\n    public void testAddPet() {\r\n        testPetList0.add(testPet1);\r\n        assertEquals(1, testPetList0.getPetArray().size());\r\n        assertEquals(1, testPetList0.getNumPets());\r\n\r\n        testPetList0.add(testPet2);\r\n        assertEquals(2, testPetList0.getPetArray().size());\r\n        assertEquals(2, testPetList0.getNumPets());\r\n\r\n        testPetList0.remove(testPet1);\r\n        assertEquals(1, testPetList0.getPetArray().size());\r\n        assertEquals(1, testPetList0.getNumPets());\r\n    }\r\n\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/model/MyModelTest.java	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ src/test/model/MyModelTest.java	(date 1614826128144)
+@@ -3,12 +3,7 @@
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ 
+-import java.io.ByteArrayOutputStream;
+-import java.io.PrintStream;
+-
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+-import static org.junit.jupiter.api.Assertions.assertFalse;
+-import static org.junit.jupiter.api.Assertions.assertTrue;
+ 
+ /*
+         testDiet1 = new Diet("Rayne Feline Kangaroo Canned", 1090);
+@@ -70,53 +65,3 @@
+ 
+ }
+ 
+-class PetListTest {
+-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+-    // test:
+-    private Pet testPet1;
+-    private Pet testPet2;
+-    private PetList testPetList0;
+-    private PetList testPetList1;
+-    private PetList testPetList2;
+-
+-    //initialize 2 pets of testing
+-    @BeforeEach
+-    public void setUp() {
+-        testPet1 = new Pet("Pretzl",
+-                19.5);
+-        testPet2 = new Pet("Peach",
+-                40);
+-        testPetList0 = new PetList();
+-        testPetList1 = new PetList();
+-        testPetList1.add(testPet1);
+-        testPetList2 = new PetList();
+-        testPetList2.add(testPet1);
+-        testPetList2.add(testPet2);
+-        System.setOut(new PrintStream(outContent));
+-    }
+-
+-
+-    @Test
+-    public void testDuplicateName() {
+-        assertTrue(testPetList1.duplicateName("pretzl"));
+-        assertFalse(testPetList1.duplicateName("peaches"));
+-    }
+-
+-
+-    @Test
+-    //tests adding, removing, printing, getting size from PetList
+-    public void testAddPet() {
+-        testPetList0.add(testPet1);
+-        assertEquals(1, testPetList0.getPetArray().size());
+-        assertEquals(1, testPetList0.getNumPets());
+-
+-        testPetList0.add(testPet2);
+-        assertEquals(2, testPetList0.getPetArray().size());
+-        assertEquals(2, testPetList0.getNumPets());
+-
+-        testPetList0.remove(testPet1);
+-        assertEquals(1, testPetList0.getPetArray().size());
+-        assertEquals(1, testPetList0.getNumPets());
+-    }
+-
+-}
+\ No newline at end of file
+Index: Project-Starter.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<module type=\"JAVA_MODULE\" version=\"4\">\r\n  <component name=\"CheckStyle-IDEA-Module\">\r\n    <option name=\"configuration\">\r\n      <map />\r\n    </option>\r\n  </component>\r\n  <component name=\"NewModuleRootManager\" inherit-compiler-output=\"true\">\r\n    <exclude-output />\r\n    <content url=\"file://$MODULE_DIR$\">\r\n      <sourceFolder url=\"file://$MODULE_DIR$/src/test\" isTestSource=\"true\" />\r\n      <sourceFolder url=\"file://$MODULE_DIR$/src/main\" isTestSource=\"false\" />\r\n    </content>\r\n    <orderEntry type=\"inheritedJdk\" />\r\n    <orderEntry type=\"sourceFolder\" forTests=\"false\" />\r\n    <orderEntry type=\"module-library\" scope=\"TEST\">\r\n      <library name=\"JUnit5.4\">\r\n        <CLASSES>\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-jupiter-5.4.2.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-jupiter-api-5.4.2.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/apiguardian-api-1.0.0.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/opentest4j-1.1.1.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-platform-commons-1.4.2.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-jupiter-params-5.4.2.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-jupiter-engine-5.4.2.jar!/\" />\r\n          <root url=\"jar://$MODULE_DIR$/lib/junit-platform-engine-1.4.2.jar!/\" />\r\n        </CLASSES>\r\n        <JAVADOC />\r\n        <SOURCES />\r\n      </library>\r\n    </orderEntry>\r\n  </component>\r\n</module>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- Project-Starter.iml	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ Project-Starter.iml	(date 1614761040991)
+@@ -29,5 +29,15 @@
+         <SOURCES />
+       </library>
+     </orderEntry>
++    <orderEntry type="library" name="json-20200518" level="application" />
++    <orderEntry type="module-library">
++      <library>
++        <CLASSES>
++          <root url="jar://$MODULE_DIR$/lib/annotations-19.0.0.jar!/" />
++        </CLASSES>
++        <JAVADOC />
++        <SOURCES />
++      </library>
++    </orderEntry>
+   </component>
+ </module>
+\ No newline at end of file
+Index: src/test/TestDiag.puml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/TestDiag.puml	(date 1614820655751)
++++ src/test/TestDiag.puml	(date 1614820655751)
+@@ -0,0 +1,16 @@
++@startuml
++'https://plantuml.com/sequence-diagram
++
++[*] --> runApp
++
++state runApp{
++    noProfile --> keepGoing
++    keepGoing: introMenu();
++}
++
++state saveJson {
++    saveJson: check name not null
++    nameNull: ask for name
++}
++
++@enduml
+\ No newline at end of file
+Index: src/main/persistence/Writable
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/persistence/Writable	(date 1614773243586)
++++ src/main/persistence/Writable	(date 1614773243586)
+@@ -0,0 +1,8 @@
++package persistence;
++
++import org.json.JSONObject;
++
++public interface Writable {
++    // EFFECTS: returns this as JSON object
++    JSONObject toJson();
++}
+Index: src/main/persistence/JsonWriter.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/persistence/JsonWriter.java	(date 1614768667396)
++++ src/main/persistence/JsonWriter.java	(date 1614768667396)
+@@ -0,0 +1,45 @@
++package persistence;
++
++import model.PetList;
++import org.json.JSONObject;
++
++
++import java.io.*;
++
++// Represents a writer that writes JSON representation of PetList to file
++public class JsonWriter {
++    private static final int TAB = 4;
++    private PrintWriter writer;
++    private String destination;
++
++    // EFFECTS: constructs writer to write to destination file
++    public JsonWriter(String destination) {
++        this.destination = destination;
++    }
++
++    // MODIFIES: this
++    // EFFECTS: opens writer; throws FileNotFoundException if destination file cannot
++    // be opened for writing
++    public void open() throws FileNotFoundException {
++        writer = new PrintWriter(new File(destination));
++    }
++
++    // MODIFIES: this
++    // EFFECTS: writes JSON representation of PetList to file
++    public void write(PetList petList) {
++        JSONObject json = petList.toJson();
++        saveToFile(json.toString(TAB));
++    }
++
++    // MODIFIES: this
++    // EFFECTS: closes writer
++    public void close() {
++        writer.close();
++    }
++
++    // MODIFIES: this
++    // EFFECTS: writes string to file
++    private void saveToFile(String json) {
++        writer.print(json);
++    }
++}
+Index: src/main/model/Pet.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package model;\r\n\r\n// Represents a cat or dog having a name and stored information relating to its energy requirements:\r\n// species, gender, neuter status, age in years, weight (kg), resting energy requirements, energy multiplicative factor,\r\n// BCS (body condition score)\r\npublic class Pet {\r\n    private String petName;\r\n    private double weightInKg;\r\n    private double mer;\r\n    private double dietCalPerKg;\r\n\r\n    /*\r\n     REQUIRES:\r\n     - petName has a non-zero length, no existing pet with identical name\r\n     - body weight in kg > 0\r\n     */\r\n    //TODO add dietCal\r\n\r\n    public Pet(String petName,\r\n               double weightInKg\r\n            /* String species,\r\n               String gender,\r\n               boolean neuterStatus,\r\n               ,\r\n               int bodyConditionScore,\r\n               double energyFactor,\r\n               int dietKCalPerKg*/\r\n               ) {\r\n        this.petName = petName;\r\n        this.weightInKg = weightInKg;\r\n        this.mer = MERcalc.findMER(weightInKg);\r\n        this.dietCalPerKg = 0;\r\n    }\r\n\r\n    //GETTERS\r\n    public String getPetName() {\r\n        return this.petName;\r\n    }\r\n\r\n    public double getWeight() {\r\n        return this.weightInKg;\r\n    }\r\n\r\n    public double getMer() {\r\n        return mer;\r\n    }\r\n\r\n    /*\r\n        MODIFIES: this.weightInKg\r\n        EFFECTS: change's the weight (kg) of a pet.\r\n         */\r\n    public void setWeight(\r\n            double newWeight) {\r\n        this.weightInKg = newWeight;\r\n    }\r\n\r\n    /*\r\n    MODIFIES: this\r\n    EFFECTS: changes a pet's name (the petName field) to the inputted String argument.\r\n    */\r\n    public void setNewName(String newName) {\r\n        this.petName = newName;\r\n    }\r\n\r\n    /*\r\n     MODIFIES: this\r\n     EFFECTS: changes the current diet of the pet to the newly inputted one.\r\n     */\r\n//    public void addDiet(Diet newDiet) {\r\n//        this.currentDiet = newDiet;\r\n//    }\r\n\r\n}\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/model/Pet.java	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ src/main/model/Pet.java	(date 1614774435669)
+@@ -1,9 +1,12 @@
+ package model;
+ 
++import org.json.JSONObject;
++/*import persistence.Writable;*/
++
+ // Represents a cat or dog having a name and stored information relating to its energy requirements:
+ // species, gender, neuter status, age in years, weight (kg), resting energy requirements, energy multiplicative factor,
+ // BCS (body condition score)
+-public class Pet {
++public class Pet /*implements Writable*/ {
+     private String petName;
+     private double weightInKg;
+     private double mer;
+@@ -25,10 +28,11 @@
+                int bodyConditionScore,
+                double energyFactor,
+                int dietKCalPerKg*/
+-               ) {
++    ) {
+         this.petName = petName;
+         this.weightInKg = weightInKg;
+-        this.mer = MERcalc.findMER(weightInKg);
++        //this.mer = MERcalc.findMER(weightInKg); todo
++        this.mer = 0;
+         this.dietCalPerKg = 0;
+     }
+ 
+@@ -41,19 +45,27 @@
+         return this.weightInKg;
+     }
+ 
+-    public double getMer() {
+-        return mer;
++    public double getDietCalPerKg() {
++        return this.dietCalPerKg;
++    }
++
++    public double getmer() {
++        return this.mer;
+     }
+ 
+     /*
+-        MODIFIES: this.weightInKg
+-        EFFECTS: change's the weight (kg) of a pet.
+-         */
++            MODIFIES: this.weightInKg
++            EFFECTS: change's the weight (kg) of a pet.
++             */
+     public void setWeight(
+             double newWeight) {
+         this.weightInKg = newWeight;
+     }
+ 
++    public double getMer() {
++        return mer;
++    }
++
+     /*
+     MODIFIES: this
+     EFFECTS: changes a pet's name (the petName field) to the inputted String argument.
+@@ -62,6 +74,20 @@
+         this.petName = newName;
+     }
+ 
++    public void setNewDiet(double newPetDiet) {
++        this.dietCalPerKg = newPetDiet;
++    }
++
++
++    public JSONObject toJson() {
++        JSONObject json = new JSONObject();
++        json.put("pet name", petName);
++        json.put("weight", weightInKg);
++        json.put("MER", mer);
++        json.put("Diet Caloric Content (KCal/kg)", dietCalPerKg);
++        return json;
++    }
++
+     /*
+      MODIFIES: this
+      EFFECTS: changes the current diet of the pet to the newly inputted one.
+Index: src/main/ui/MERApp.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package ui;\r\n\r\nimport model.Pet;\r\nimport model.PetList;\r\n\r\nimport java.util.Arrays;\r\nimport java.util.Scanner;\r\n\r\n// Pet Calorie Calculator application\r\n// user interface methods\r\npublic class MERApp {\r\n    private static final Scanner scanner = new Scanner(System.in);\r\n    private final PetList newPetList = new PetList();\r\n\r\n    public MERApp() {\r\n        runApp();\r\n    }\r\n\r\n    //MODIFIES: this\r\n    //EFFECTS: processes user input\r\n    private void runApp() {\r\n        boolean keepGoing = true;\r\n\r\n        while (keepGoing) {\r\n            displayMenu();\r\n            String command = scanner.next();\r\n            command = command.toLowerCase();\r\n\r\n            if (command.equals(\"q\")) {\r\n                keepGoing = false;\r\n            } else {\r\n                processCommand(command);\r\n            }\r\n        }\r\n        System.out.println(\"\\nGoodbye!\");\r\n    }\r\n\r\n    /*\r\n    MODIFIES: this\r\n     EFFECTS: processes user command from main menu of options\r\n     */\r\n    private void processCommand(String command) {\r\n        switch (command) {\r\n            case \"n\":\r\n                // make new pet\r\n                addNewPet();\r\n                break;\r\n\r\n            case \"v\":\r\n                //view all pets name\r\n                viewPet();\r\n                break;\r\n\r\n            case \"r\":\r\n                removePet();\r\n                break;\r\n\r\n            default:\r\n                System.out.println(\"Selection not valid...\");\r\n                break;\r\n        }\r\n    }\r\n\r\n    private void printMenuHeader() {\r\n        System.out.println(\"\\n------------------------------------\");\r\n        System.out.println(\"Pet Weight Management App Main Menu\");\r\n        System.out.println(\"------------------------------------\");\r\n    }\r\n\r\n    /*\r\n    EFFECTS: displays action menu to user, excludes view/edit/remove options if newPetList is empty\r\n    */\r\n    private void displayMenu() {\r\n        if (newPetList.getNumPets() == 0) {\r\n            printMenuHeader();\r\n            for (String s : Arrays.asList(\r\n                    \"\\nNo Current Pets Found. \",\r\n                    \"\\nn -> Add a New Pet\",\r\n                    \"p -> quit\",\r\n                    \"\\n---------------------------\")) {\r\n                System.out.println(s);\r\n            }\r\n        } else {\r\n            printMenuHeader();\r\n            System.out.println(\"\\nPlease input the key corresponding to an option.\");\r\n            System.out.println(\"\\nCurrent Pets:\");\r\n            printPetNames();\r\n            for (String s : Arrays.asList(\r\n                    \"\\n\\nOptions:\",\r\n                    \"\\nv -> Current Pets\",\r\n                    \"n -> Add a New Pet\",\r\n                    \"r -> Remove a Pet\",\r\n                    \"q -> quit\")) {\r\n                System.out.println(s);\r\n            }\r\n        }\r\n\r\n    }\r\n\r\n    /*REQUIRES: at least 1 Pet in newPetList\r\n    EFFECTS: prints all pets */\r\n    private void viewPet() {\r\n        System.out.println(\"CURRENT PETS:\");\r\n        printAllPets();\r\n\r\n        System.out.println(\"Select a pet by entering the corresponding number, or b to return to main menu\");\r\n        printPetSelect();\r\n        selectOrBack();\r\n    }\r\n\r\n    private void selectOrBack() {\r\n        if (scanner.hasNextInt()) {\r\n            //todo add exception to check that scanner.nextInt() < newPetList.getNumPets()\r\n            //int petIndex = scanner.nextInt();\r\n            editPet(scanner.nextInt());\r\n        } else if (scanner.hasNext() && scanner.next().equalsIgnoreCase(\"b\")) {\r\n            System.out.println(\"Back to main menu.\");\r\n        }\r\n    }\r\n\r\n    /*REQUIRES: newPetList Array has >= 1 Pet\r\n    MODIFIES: this\r\n    EFFECTS: changes 1 field of a Pet object to new user input*/\r\n    private void editPet(int petIndex) {\r\n        Pet selectedPet = newPetList.getPetArray().get(petIndex);\r\n        boolean stayHere = true;\r\n\r\n        while (stayHere) {\r\n            printPetFields(selectedPet);\r\n            displayPetMenu();\r\n            String command = scanner.next();\r\n            if (command.equals(\"b\")) {\r\n                stayHere = false;\r\n            } else {\r\n                switch (command) {\r\n                    /*case \"d\":\r\n                        editDiet(selectedPet);\r\n                        break;*/\r\n                    case \"n\":\r\n                        editName(selectedPet);\r\n                        break;\r\n                    case \"w\":\r\n                        editWeight(selectedPet);\r\n                        break;\r\n\r\n                    default:\r\n                        throw new IllegalStateException(\"Unexpected value: \" + command);\r\n                }\r\n            }\r\n        }\r\n\r\n    }\r\n\r\n    //todo editDiet()\r\n\r\n    private void displayPetMenu() {\r\n        System.out.println(\"n -> edit pet name\");\r\n        System.out.println(\"w -> edit pet weight\");\r\n        System.out.println(\"d -> add or change diet information\");\r\n        System.out.println(\"b -> back to Main Menu\");\r\n    }\r\n\r\n    /*\r\n    REQUIRES: newPetList Array created\r\n    MODIFIES: this\r\n    EFFECTS: adds new Pet object to newPetList Array via user inputs for fields\r\n    */\r\n    private void addNewPet() {\r\n        boolean keepgoing = true;\r\n\r\n        while (keepgoing) {\r\n            System.out.println(\"ADD A NEW PET\");\r\n            System.out.println(\"Enter new pet name:\");\r\n            String petName = scanner.next();\r\n            petName = petName.toLowerCase();\r\n\r\n            if (newPetList.duplicateName(petName)) {\r\n                System.out.println(\"There is already a pet with that name! Try a new pet name:\");\r\n            } else {\r\n                Pet newPet = createNewPet(petName);\r\n                System.out.println(\"\\nNew pet added: \" + newPet.getPetName());\r\n                newPetList.add(newPet);\r\n                printPetFields(newPet);\r\n                keepgoing = false;\r\n            }\r\n        }\r\n    }\r\n\r\n    /*\r\n    REQUIRES: unique pet name from existing Pets in newPetList\r\n    EFFECTS: creates new Pet based on name argument and field values from user input\r\n     */\r\n    private Pet createNewPet(String petName) {\r\n        System.out.println(\"Enter new pet's weight (kg):\");\r\n        double petWtKg = scanner.nextDouble();\r\n\r\n        return new Pet(petName, petWtKg);\r\n    }\r\n\r\n    /*REQUIRES: newPetList Array has >= 1 Pet\r\n    MODIFIES: this\r\n    EFFECTS: removes Pet object to newPetList Array*/\r\n    private void removePet() {\r\n        for (String s : Arrays.asList(\"REMOVE PET\", \"Select pet to remove (enter corresponding number):\")) {\r\n            System.out.println(s);\r\n        }\r\n        printPetSelect();\r\n        Pet petToRemove = selectPet();\r\n        String removedPetName = petToRemove.getPetName();\r\n        newPetList.remove(petToRemove);\r\n        System.out.printf(\"%s successfully removed.%n\", removedPetName);\r\n    }\r\n\r\n    /*REQUIRES: newPetList Array has >= 1 Pet\r\n    EFFECTS: prints a list of pet names and returns a user-selected Pet from newPetList*/\r\n    private Pet selectPet() {\r\n        //todo: add option to immediately go back to main menu without editing\r\n        if (scanner.hasNextInt()) {\r\n            int petIndex = scanner.nextInt();\r\n            return newPetList.getPetArray().get(petIndex);\r\n        } else if (scanner.hasNext() && scanner.next().equalsIgnoreCase(\"b\")) {\r\n            runApp();\r\n        }\r\n\r\n        return null;\r\n    }\r\n\r\n\r\n    /*REQUIRES: newPetList Array has >= 1 Pet\r\n    MODIFIES: this\r\n    EFFECTS: changes the weight field of the Pet object to new user input*/\r\n    private void editWeight(Pet petToEdit) {\r\n        // edit weight\r\n        System.out.println(\"Enter new pet weight:\");\r\n        double newWeight = scanner.nextDouble();\r\n        petToEdit.setWeight(newWeight);\r\n    }\r\n\r\n    /*REQUIRES: newPetList Array has >= 1 Pet\r\n    MODIFIES: this\r\n    EFFECTS: changes the name field of the Pet object to new user input*/\r\n    private void editName(Pet petToEdit) {\r\n        // edit name\r\n        System.out.println(\"Enter new pet name:\");\r\n        String newPetName = scanner.next();\r\n        petToEdit.setNewName(newPetName);\r\n    }\r\n\r\n    /*\r\n    EFFECTS: prints the list of Pet names in newPetList and their array index.\r\n     */\r\n    private void printPetSelect() {\r\n        for (int i = 0; newPetList.getNumPets() > i; i++) {\r\n            Pet currentPet = newPetList.getPetArray().get(i);\r\n            System.out.printf(\"%s - %d%n\", currentPet.getPetName(), i);\r\n        }\r\n    }\r\n\r\n    /*\r\n    EFFECTS: prints the list of Pet names in newPetList.\r\n     */\r\n    private void printPetNames() {\r\n        for (int i = 0; newPetList.getNumPets() > i; i++) {\r\n            Pet currentPet = newPetList.getPetArray().get(i);\r\n            System.out.printf(currentPet.getPetName());\r\n        }\r\n    }\r\n\r\n    /*\r\n    EFFECTS: Prints all fields for a Pet.\r\n    */\r\n    public void printPetFields(Pet petToPrint) {\r\n        System.out.println(\"\\nName: \" + petToPrint.getPetName());\r\n        System.out.println(\"Weight: \" + petToPrint.getWeight() + \" kg\\n\");\r\n    }\r\n\r\n    /*\r\n    EFFECTS: prints all pets with all of their fields to the user console.\r\n    */\r\n    public void printAllPets() {\r\n        for (int i = 0; i < newPetList.getNumPets(); i++) {\r\n            Pet printPet = newPetList.getPetArray().get(i);\r\n            printPetFields(printPet);\r\n        }\r\n    }\r\n\r\n\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/ui/MERApp.java	(revision 951e0363c0ee912f96315c3a28fe6e85a51dc753)
++++ src/main/ui/MERapp.java	(date 1614825754452)
+@@ -2,118 +2,270 @@
+ 
+ import model.Pet;
+ import model.PetList;
++import persistence.JsonReader;
++import persistence.JsonWriter;
+ 
++import java.io.FileNotFoundException;
++import java.io.IOException;
+ import java.util.Arrays;
+ import java.util.Scanner;
+ 
+ // Pet Calorie Calculator application
+ // user interface methods
+-public class MERApp {
++public class MERapp {
++    private static final String JSON_STORE = "./data/profiles.json";
+     private static final Scanner scanner = new Scanner(System.in);
+-    private final PetList newPetList = new PetList();
++    private PetList petList;
++    private JsonWriter jsonWriter;
++    private JsonReader jsonReader;
+ 
+-    public MERApp() {
++    public MERapp() {
++        petList = new PetList();
++        jsonReader = new JsonReader(JSON_STORE);
++        jsonWriter = new JsonWriter(JSON_STORE);
+         runApp();
+     }
+ 
+-    //MODIFIES: this
+-    //EFFECTS: processes user input
++    //EFFECTS: directs user to intro menu if no profile currently loaded or the main menu of options
+     private void runApp() {
+         boolean keepGoing = true;
+ 
+         while (keepGoing) {
+-            displayMenu();
+-            String command = scanner.next();
+-            command = command.toLowerCase();
+-
+-            if (command.equals("q")) {
+-                keepGoing = false;
+-            } else {
+-                processCommand(command);
++            if (petList.getNumPets() == 0) {
++                keepGoing = introMenu();
++            } else {
++                displayMainPetMenu();
++                String command = scanner.next();
++                if (command.equalsIgnoreCase("q")) {
++                    keepGoing = false;
++                } else {
++                    processMainMenuCommand(command);
++                }
+             }
+         }
+         System.out.println("\nGoodbye!");
+     }
+ 
++    /*
++    EFFECTS: displays and processes input for intro menu
++     */
++    private Boolean introMenu() {
++        displayIntroMenu();
++        String command = scanner.next();
++        if (command.equalsIgnoreCase("q")) {
++            return false;
++        } else {
++            processIntroMenuCommand(command);
++        }
++        return true; //todo
++    }
++
++    /*
++    EFFECTS: display intro menu options: load saved profile, create new profile, or quit
++     */
++    private void displayIntroMenu() {
++        printMenuHeader();
++        for (String s : Arrays.asList(
++                "\nl -> Load profile",
++                "n -> Create a new profile",
++                "q -> quit",
++                "\n---------------------------")) {
++            System.out.println(s);
++        }
++    }
++
++    /*
++    EFFECTS: processes commands of intro menu given a valid non-exit command
++     */
++    private void processIntroMenuCommand(String command) {
++        switch (command) {
++            case "n":
++                //make new pet with new profile
++                addNewPet();
++                break;
++            case "l":
++                //load saved profile
++                loadSavedPetList();
++        }
++    }
++
++    //todo json
++    private void loadSavedPetList() {
++        try {
++            petList = jsonReader.read();
++            System.out.println("Loaded " + petList.getOwnerName() + " from " + JSON_STORE);
++        } catch (IOException e) {
++            System.out.println("Unable to read from file: " + JSON_STORE);
++        }
++    }
++
+     /*
+     MODIFIES: this
+      EFFECTS: processes user command from main menu of options
+      */
+-    private void processCommand(String command) {
++    private void processMainMenuCommand(String command) {
+         switch (command) {
+             case "n":
+                 // make new pet
+                 addNewPet();
+                 break;
+-
+-            case "v":
++            case "m":
+                 //view all pets name
+                 viewPet();
+                 break;
+-
+             case "r":
+-                removePet();
++                removePetChoose();
+                 break;
+-
++            case "s":
++                savePetList();
++                break;
++            case "p":
++                clearPetList();
++                break;
+             default:
+                 System.out.println("Selection not valid...");
+                 break;
+         }
+     }
+ 
++    //todo
++    /*
++    MODIFIES: this
++    EFFECTS: remove all data from fields of petList
++     */
++    private void clearPetList() {
++        petList = new PetList();
++    }
++
++    //todo json method
++    /*
++    REQUIRES: at least 1 pet in petList
++    MODIFIES: ./data.profiles.json
++    EFFECTS: confirms user name then saves petList to save path
++     */
++    private void savePetList() {
++        confirmOwnerName();
++        try {
++            jsonWriter.open();
++            jsonWriter.write(petList);
++            jsonWriter.close();
++            System.out.println("Saved " + petList.getOwnerName() + "'s profile to " + JSON_STORE);
++        } catch (FileNotFoundException e) {
++            System.out.println("Unable to write to file: " + JSON_STORE);
++        }
++    }
++
++    /*
++        REQUIRES: at least 1 pet in petList
++        MODIFIES: this
++        EFFECTS: prompts user to input owner name if name is null, or confirm current user name with option to edit
++         */
++    //todo
++    private void confirmOwnerName() {
++        if (petList.getOwnerName() == null) {
++            System.out.println("This profile currently has no owner name.");
++            newOwnerName();
++        } else {
++            String ownerName = petList.getOwnerName();
++            System.out.printf("Please confirm that the current profile name is correct (Y/N): %s",
++                    ownerName);
++            boolean confirmNameBool = processConfirmName();
++            if (!confirmNameBool) {
++                newOwnerName();
++            }
++        }
++    }
++
++    /*
++    REQUIRES: assumes there is at least 1 Pet in petList.
++    MODIFIES: this
++    EFFECTS: sets owner name field of petList to inputted String.
++     */
++    private void newOwnerName() {
++        System.out.println("Please enter your new name:");
++        String inputName = scanner.next();
++        petList.setOwnerName(inputName);
++    }
++
++    /*
++    REQUIRES: valid String variable in the owner name field of petList.
++    EFFECTS: processes user input for confirming the current owner name
++     */
++    private boolean processConfirmName() {
++        String confirmNameStr = scanner.next();
++        confirmNameStr = confirmNameStr.toLowerCase();
++        switch (confirmNameStr) {
++            case "y":
++                return true;
++            case "n":
++                return false;
++            default:
++                throw new IllegalStateException("Unexpected value: " + confirmNameStr);
++        }
++    }
++
++    /*
++    EFFECTS: prints Application menu header
++     */
+     private void printMenuHeader() {
+         System.out.println("\n------------------------------------");
+         System.out.println("Pet Weight Management App Main Menu");
+         System.out.println("------------------------------------");
+     }
+ 
++
+     /*
+-    EFFECTS: displays action menu to user, excludes view/edit/remove options if newPetList is empty
+-    */
+-    private void displayMenu() {
+-        if (newPetList.getNumPets() == 0) {
+-            printMenuHeader();
+-            for (String s : Arrays.asList(
+-                    "\nNo Current Pets Found. ",
+-                    "\nn -> Add a New Pet",
+-                    "p -> quit",
+-                    "\n---------------------------")) {
+-                System.out.println(s);
+-            }
+-        } else {
+-            printMenuHeader();
+-            System.out.println("\nPlease input the key corresponding to an option.");
+-            System.out.println("\nCurrent Pets:");
+-            printPetNames();
+-            for (String s : Arrays.asList(
+-                    "\n\nOptions:",
+-                    "\nv -> Current Pets",
+-                    "n -> Add a New Pet",
+-                    "r -> Remove a Pet",
+-                    "q -> quit")) {
+-                System.out.println(s);
+-            }
+-        }
++    EFFECTS: prints options for main menu if a profile is currently loaded
++     */
++    private void displayMainPetMenu() {
++        printMenuHeader();
++        System.out.println("\nPlease input the key corresponding to an option.");
++        System.out.println("\nCurrent Pets:");
++        printPetNames(", ");
++        for (String s : Arrays.asList(
++                "\n\nOptions:",
++                "\nm -> Manage Current Pets",
++                "n -> Add a New Pet",
++                "r -> Remove a Pet",
++                "s -> Save Session",
++                "p -> exit current profile",
++                "q -> quit")) {
++            System.out.println(s);
++        }
++    }
+ 
+-    }
+-
+-    /*REQUIRES: at least 1 Pet in newPetList
+-    EFFECTS: prints all pets */
++    /*
++    REQUIRES: at least 1 Pet in newPetList
++    EFFECTS: prints all pets and allows user to select a pet to edit or (b) to main menu
++    */
+     private void viewPet() {
+         System.out.println("CURRENT PETS:");
+-        printAllPets();
++        printAllPetsAllFields();
+ 
+-        System.out.println("Select a pet by entering the corresponding number, or b to return to main menu");
++        System.out.println("Select a pet to edit by entering the corresponding number, or b to return to main menu");
+         printPetSelect();
+-        selectOrBack();
++        selectOrBack(); //todo fix
+     }
+ 
++    /*
++    REQUIRES: inputted int < number of pets in newPetList
++    EFFECTS: processes user input for the viewPet menu -
++             either an integer corresponding to a pet to edit or (b)ack to main menu
++     */
+     private void selectOrBack() {
+-        if (scanner.hasNextInt()) {
+-            //todo add exception to check that scanner.nextInt() < newPetList.getNumPets()
+-            //int petIndex = scanner.nextInt();
+-            editPet(scanner.nextInt());
+-        } else if (scanner.hasNext() && scanner.next().equalsIgnoreCase("b")) {
++        String selection = scanner.next();
++        try {
++            int petIndex = Integer.parseInt(selection);
++            editPet(petIndex);
++        } catch (NumberFormatException e) {
++            switch (selection) {
++                case "b":
++                    System.out.println("Back to main menu.");
++                    break;
++                default:
++                    System.out.println("Selection not valid...");
++                    break;
++            }
+             System.out.println("Back to main menu.");
+         }
+     }
+@@ -122,43 +274,55 @@
+     MODIFIES: this
+     EFFECTS: changes 1 field of a Pet object to new user input*/
+     private void editPet(int petIndex) {
+-        Pet selectedPet = newPetList.getPetArray().get(petIndex);
++        Pet selectedPet = petList.getPetArray().get(petIndex);
+         boolean stayHere = true;
+ 
+         while (stayHere) {
+             printPetFields(selectedPet);
+             displayPetMenu();
+             String command = scanner.next();
+-            if (command.equals("b")) {
++            if ((command.equals("b")) && (petList.getNumPets() == 0)) {
+                 stayHere = false;
+             } else {
+-                switch (command) {
+-                    /*case "d":
+-                        editDiet(selectedPet);
+-                        break;*/
+-                    case "n":
+-                        editName(selectedPet);
+-                        break;
+-                    case "w":
+-                        editWeight(selectedPet);
+-                        break;
+-
+-                    default:
+-                        throw new IllegalStateException("Unexpected value: " + command);
+-                }
+-            }
++                processPetMenuCommand(command, selectedPet);
++            }
++        }
++    }
++
++    /*
++    REQUIRES: at least 1 Pet in newPetList
++    EFFECTS: displays a pet's option menu
++     */
++    private void displayPetMenu() {
++        System.out.println("e -> edit pet name");
++        System.out.println("w -> edit pet weight");
++        System.out.println("d -> add or change diet information");
++        System.out.println("r -> remove this pet");
++        System.out.println("b -> back to Main Menu");
++    }
++
++    /*
++    REQUIRES: at least 1 Pet in newPetList
++    EFFECTS: processes user input for a pet's option menu
++     */
++    private void processPetMenuCommand(String command, Pet selectedPet) {
++        switch (command) {
++            case "d":
++                editDiet(selectedPet);
++                break;
++            case "e":
++                editName(selectedPet);
++                break;
++            case "w":
++                editWeight(selectedPet);
++                break;
++            case "r":
++                removeSelectedPet(selectedPet);
++                break;
++            default:
++                throw new IllegalStateException("Unexpected value: " + command);
+         }
+-
+     }
+-
+-    //todo editDiet()
+-
+-    private void displayPetMenu() {
+-        System.out.println("n -> edit pet name");
+-        System.out.println("w -> edit pet weight");
+-        System.out.println("d -> add or change diet information");
+-        System.out.println("b -> back to Main Menu");
+-    }
+ 
+     /*
+     REQUIRES: newPetList Array created
+@@ -166,22 +330,21 @@
+     EFFECTS: adds new Pet object to newPetList Array via user inputs for fields
+     */
+     private void addNewPet() {
+-        boolean keepgoing = true;
++        boolean keepgoingnaming = true;
+ 
+-        while (keepgoing) {
++        while (keepgoingnaming) {
+             System.out.println("ADD A NEW PET");
+             System.out.println("Enter new pet name:");
+             String petName = scanner.next();
+-            petName = petName.toLowerCase();
+ 
+-            if (newPetList.duplicateName(petName)) {
++            if (petList.duplicateName(petName)) {
+                 System.out.println("There is already a pet with that name! Try a new pet name:");
+             } else {
+-                Pet newPet = createNewPet(petName);
++                Pet newPet = instantiateNewPet(petName);
+                 System.out.println("\nNew pet added: " + newPet.getPetName());
+-                newPetList.add(newPet);
++                petList.add(newPet);
+                 printPetFields(newPet);
+-                keepgoing = false;
++                keepgoingnaming = false;
+             }
+         }
+     }
+@@ -190,38 +353,50 @@
+     REQUIRES: unique pet name from existing Pets in newPetList
+     EFFECTS: creates new Pet based on name argument and field values from user input
+      */
+-    private Pet createNewPet(String petName) {
++    private Pet instantiateNewPet(String petName) {
+         System.out.println("Enter new pet's weight (kg):");
+         double petWtKg = scanner.nextDouble();
+-
+         return new Pet(petName, petWtKg);
+     }
+ 
+     /*REQUIRES: newPetList Array has >= 1 Pet
+     MODIFIES: this
+     EFFECTS: removes Pet object to newPetList Array*/
+-    private void removePet() {
++    //todo add removal confirmation
++    private void removePetChoose() {
+         for (String s : Arrays.asList("REMOVE PET", "Select pet to remove (enter corresponding number):")) {
+             System.out.println(s);
+         }
+         printPetSelect();
+         Pet petToRemove = selectPet();
+         String removedPetName = petToRemove.getPetName();
+-        newPetList.remove(petToRemove);
++        petList.remove(petToRemove);
+         System.out.printf("%s successfully removed.%n", removedPetName);
+     }
+ 
+-    /*REQUIRES: newPetList Array has >= 1 Pet
+-    EFFECTS: prints a list of pet names and returns a user-selected Pet from newPetList*/
++    /*
++    REQUIRES: newPetList has at least 1 Pet object
++    MODIFIES: this
++    EFFECTS: removes a selected Pet from newPetList
++     */
++    private void removeSelectedPet(Pet selectedPet) {
++        String removedPetName = selectedPet.getPetName();
++        petList.remove(selectedPet);
++        //todo printing not working
++        System.out.printf("%s successfully removed.%n", removedPetName);
++    }
++
++    /*
++    REQUIRES: newPetList Array has >= 1 Pet
++    EFFECTS: prints a list of pet names and returns a user-selected Pet from newPetList, or b -> prev menu
++    */
+     private Pet selectPet() {
+-        //todo: add option to immediately go back to main menu without editing
+         if (scanner.hasNextInt()) {
+             int petIndex = scanner.nextInt();
+-            return newPetList.getPetArray().get(petIndex);
++            return petList.getPetArray().get(petIndex);
+         } else if (scanner.hasNext() && scanner.next().equalsIgnoreCase("b")) {
+             runApp();
+         }
+-
+         return null;
+     }
+ 
+@@ -246,23 +421,42 @@
+         petToEdit.setNewName(newPetName);
+     }
+ 
++    //todo abstract the edit fns
++    //todo editDiet() docstring
++    //todo expand diet var to 3 types (can cup kg)
++    private void editDiet(Pet petToEdit) {
++        System.out.println("Enter caloric information for current diet (kCal/kg):");
++        double newPetDiet = scanner.nextDouble();
++        petToEdit.setNewDiet(newPetDiet);
++    }
++
+     /*
+     EFFECTS: prints the list of Pet names in newPetList and their array index.
+      */
+     private void printPetSelect() {
+-        for (int i = 0; newPetList.getNumPets() > i; i++) {
+-            Pet currentPet = newPetList.getPetArray().get(i);
++        for (int i = 0; petList.getNumPets() > i; i++) {
++            Pet currentPet = petList.getPetArray().get(i);
+             System.out.printf("%s - %d%n", currentPet.getPetName(), i);
+         }
+     }
+ 
+     /*
++    REQUIRES: assumes there is at least 1 Pet in petList
+     EFFECTS: prints the list of Pet names in newPetList.
+      */
+-    private void printPetNames() {
+-        for (int i = 0; newPetList.getNumPets() > i; i++) {
+-            Pet currentPet = newPetList.getPetArray().get(i);
+-            System.out.printf(currentPet.getPetName());
++    private void printPetNames(String delimiter) {
++        //only one pet
++        if (petList.getNumPets() == 1) {
++            Pet currentPet = petList.getPetArray().get(0);
++            System.out.println(currentPet.getPetName());
++        } else { //more than 1 pet, print pet+delim, last pet is not followed by delim
++            for (int i = 0; (petList.getNumPets() - 1) > i; i++) {
++                Pet currentPet = petList.getPetArray().get(i);
++                System.out.printf(currentPet.getPetName() + delimiter);
++            }
++            int lastIndex = petList.getNumPets() - 1;
++            Pet lastPet = petList.getPetArray().get(lastIndex);
++            System.out.printf(lastPet.getPetName());
+         }
+     }
+ 
+@@ -272,17 +466,25 @@
+     public void printPetFields(Pet petToPrint) {
+         System.out.println("\nName: " + petToPrint.getPetName());
+         System.out.println("Weight: " + petToPrint.getWeight() + " kg\n");
++        System.out.println("Diet caloric content: " + petToPrint.getDietCalPerKg() + " kCal/kg\n");
+     }
+ 
+     /*
+     EFFECTS: prints all pets with all of their fields to the user console.
+     */
+-    public void printAllPets() {
+-        for (int i = 0; i < newPetList.getNumPets(); i++) {
+-            Pet printPet = newPetList.getPetArray().get(i);
++    public void printAllPetsAllFields() {
++        for (int i = 0; i < petList.getNumPets(); i++) {
++            Pet printPet = petList.getPetArray().get(i);
+             printPetFields(printPet);
+         }
+     }
+ 
++/*    *//*
++    EFFECTS: changes given string to be first letter capitalized followed by lower case letters.
++     *//*
++    public String capitalizeFirst(String str) {
++        str = str.substring(0,1).toUpperCase() + str.substring(1).toLowerCase();
++        return str;
++    }*/
+ 
+ }
+Index: src/test/persistence/JsonWriterTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/persistence/JsonWriterTest.java	(date 1614826086173)
++++ src/test/persistence/JsonWriterTest.java	(date 1614826086173)
+@@ -0,0 +1,4 @@
++package persistence;
++
++public class JsonWriterTest {
++}
+Index: src/test/persistence/JsonReaderTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/persistence/JsonReaderTest.java	(date 1614826086166)
++++ src/test/persistence/JsonReaderTest.java	(date 1614826086166)
+@@ -0,0 +1,4 @@
++package persistence;
++
++public class JsonReaderTest {
++}
+Index: src/test/model/PetListTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/model/PetListTest.java	(date 1614826128135)
++++ src/test/model/PetListTest.java	(date 1614826128135)
+@@ -0,0 +1,60 @@
++package model;
++
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++
++import java.io.ByteArrayOutputStream;
++import java.io.PrintStream;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++class PetListTest {
++    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
++    // test:
++    private Pet testPet1;
++    private Pet testPet2;
++    private PetList testPetList0;
++    private PetList testPetList1;
++    private PetList testPetList2;
++
++    //initialize 2 pets of testing
++    @BeforeEach
++    public void setUp() {
++        testPet1 = new Pet("Pretzl",
++                19.5);
++        testPet2 = new Pet("Peach",
++                40);
++        testPetList0 = new PetList();
++        testPetList1 = new PetList();
++        testPetList1.add(testPet1);
++        testPetList2 = new PetList();
++        testPetList2.add(testPet1);
++        testPetList2.add(testPet2);
++        System.setOut(new PrintStream(outContent));
++    }
++
++
++    @Test
++    public void testDuplicateName() {
++        assertTrue(testPetList1.duplicateName("pretzl"));
++        assertFalse(testPetList1.duplicateName("peaches"));
++    }
++
++
++    @Test
++    //tests adding, removing, printing, getting size from PetList
++    public void testAddPet() {
++        testPetList0.add(testPet1);
++        assertEquals(1, testPetList0.getPetArray().size());
++        assertEquals(1, testPetList0.getNumPets());
++
++        testPetList0.add(testPet2);
++        assertEquals(2, testPetList0.getPetArray().size());
++        assertEquals(2, testPetList0.getNumPets());
++
++        testPetList0.remove(testPet1);
++        assertEquals(1, testPetList0.getPetArray().size());
++        assertEquals(1, testPetList0.getNumPets());
++    }
++
++}
