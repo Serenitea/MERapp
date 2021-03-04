@@ -1,5 +1,7 @@
 package model;
 
+import java.lang.Math;
+
 public enum MERfactor {
     ADULTNEUTERED(1.6, 1.6),
     ADULTINTACT(1.8, 1.8),

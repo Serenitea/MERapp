@@ -1,5 +1,123 @@
 package model;
 
-class MyModelTest {
-    // delete or rename this class!
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/*
+        testDiet1 = new Diet("Rayne Feline Kangaroo Canned", 1090);
+        testDiet2 = new Diet("Hill's Canine t/d dry", 3504);
+ */
+
+
+//Unit tests for Pet
+class PetTest {
+    // test:
+    private Pet testPet1;
+    private Pet testPet2;
+    private PetList testPetList;
+
+
+    //initialize 2 pets for testing
+    @BeforeEach
+    public void setUp() {
+        testPet1 = new Pet("Pretzl",
+                19.5);
+        testPet2 = new Pet("Peach",
+                40);
+    }
+
+    @Test
+    public void testNames() {
+        assertEquals("Pretzl", testPet1.getPetName());
+        testPet1.setNewName("Poof");
+        assertEquals("Poof", testPet1.getPetName());
+
+        assertEquals("Peach", testPet2.getPetName());
+        testPet2.setNewName("Pink");
+        assertEquals("Pink", testPet2.getPetName());
+    }
+
+    @Test
+    public void testWeights() {
+        assertEquals(19.5, testPet1.getWeight());
+        assertEquals(40, testPet2.getWeight());
+    }
+
+    @Test
+    public void addWeightTest() {
+        testPet1.setWeight(15.0);
+        assertEquals(15.0, testPet1.getWeight());
+
+        testPet2.setWeight(17.4);
+        assertEquals(17.4, testPet2.getWeight());
+    }
+
+    @Test
+    public void testChangeName() {
+        testPet1.setNewName("Pretzel");
+        assertEquals("Pretzel", testPet1.getPetName());
+        testPet2.setNewName("Peaches");
+        assertEquals("Peaches", testPet2.getPetName());
+    }
+
+
+}
+
+class PetListTest {
+    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+    // test:
+    private Pet testPet1;
+    private Pet testPet2;
+    private PetList testPetList0;
+    private PetList testPetList1;
+    private PetList testPetList2;
+
+    //initialize 2 pets of testing
+    @BeforeEach
+    public void setUp() {
+        testPet1 = new Pet("Pretzl",
+                19.5);
+        testPet2 = new Pet("Peach",
+                40);
+        testPetList0 = new PetList();
+        testPetList1 = new PetList();
+        testPetList1.add(testPet1);
+        testPetList2 = new PetList();
+        testPetList2.add(testPet1);
+        testPetList2.add(testPet2);
+        System.setOut(new PrintStream(outContent));
+    }
+
+
+    @Test
+    public void testDuplicateName() {
+        assertTrue(testPetList1.duplicateName("pretzl"));
+        assertFalse(testPetList1.duplicateName("peaches"));
+    }
+
+
+    @Test
+    //tests adding, removing, printing, getting size from PetList
+    public void testAddPet() {
+        testPetList0.add(testPet1);
+        assertEquals(1, testPetList0.getPetArray().size());
+        assertEquals(1, testPetList0.getNumPets());
+
+        testPetList0.add(testPet2);
+        assertEquals(2, testPetList0.getPetArray().size());
+        assertEquals(2, testPetList0.getNumPets());
+
+        testPetList0.remove(testPet1);
+        assertEquals(1, testPetList0.getPetArray().size());
+        assertEquals(1, testPetList0.getNumPets());
+    }
+
 }

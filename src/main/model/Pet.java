@@ -45,6 +45,7 @@ public class Pet /*implements Writable*/ {
         return this.weightInKg;
     }
 
+
     public double getDietCalPerKg() {
         return this.dietCalPerKg;
     }
@@ -57,10 +58,12 @@ public class Pet /*implements Writable*/ {
             MODIFIES: this.weightInKg
             EFFECTS: change's the weight (kg) of a pet.
              */
+
     public void setWeight(
             double newWeight) {
         this.weightInKg = newWeight;
     }
+
 
     public double getMer() {
         return mer;
@@ -73,6 +76,7 @@ public class Pet /*implements Writable*/ {
     public void setNewName(String newName) {
         this.petName = newName;
     }
+
 
     public void setNewDiet(double newPetDiet) {
         this.dietCalPerKg = newPetDiet;
@@ -87,6 +91,7 @@ public class Pet /*implements Writable*/ {
         json.put("Diet Caloric Content (KCal/kg)", dietCalPerKg);
         return json;
     }
+
 
     /*
      MODIFIES: this

@@ -17,6 +17,7 @@ public class PetList /*implements Writable*/ {
     /*EFFECTS: constructs a PetList with an empty myPets ArrayList.*/
     public PetList() {
         this.myPets = new ArrayList<>();
+
     }
 
     /*
@@ -52,6 +53,7 @@ public class PetList /*implements Writable*/ {
      */
     public ArrayList<Pet> getPetArray() {
         return this.myPets;
+
     }
 
     /*
@@ -92,4 +94,5 @@ public class PetList /*implements Writable*/ {
         }
         return jsonArray;
     }
+
 }
