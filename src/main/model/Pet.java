@@ -65,8 +65,8 @@ public class Pet implements Writable {
     }
 
 
-    public double getMer() {
-        return mer;
+    public void setMER(double newMER) {
+        this.mer = newMER;
     }
 
     /*

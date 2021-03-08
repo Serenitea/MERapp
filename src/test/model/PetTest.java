@@ -1,15 +1,11 @@
 package model;
 
 
+/*import org.json.JSONObject;*/
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /*
         testDiet1 = new Diet("Rayne Feline Kangaroo Canned", 1090);
@@ -23,6 +19,7 @@ class PetTest {
     private Pet testPet1;
     private Pet testPet2;
     private PetList testPetList;
+/*    private JSONObject EXPECTED_RETURNED_PET;*/
 
 
     //initialize 2 pets for testing
@@ -61,11 +58,37 @@ class PetTest {
     }
 
     @Test
-    public void testChangeName() {
-        testPet1.setNewName("Pretzel");
-        assertEquals("Pretzel", testPet1.getPetName());
-        testPet2.setNewName("Peaches");
-        assertEquals("Peaches", testPet2.getPetName());
+    public void testDietCalPerKg() {
+
+        assertEquals(0, testPet1.getDietCalPerKg());
+        testPet1.setNewDiet(42.0);
+        assertEquals(42.0, testPet1.getDietCalPerKg());
+
+        assertEquals(0, testPet2.getDietCalPerKg());
+        testPet2.setNewDiet(4.0);
+        assertEquals(4.0, testPet2.getDietCalPerKg());
+    }
+
+    @Test
+    public void testMER() {
+
+        assertEquals(0, testPet1.getmer());
+        testPet1.setMER(42.0);
+        assertEquals(42.0, testPet1.getmer());
+
+        assertEquals(0, testPet2.getmer());
+        testPet2.setMER(4.0);
+        assertEquals(4.0, testPet2.getmer());
+    }
+
+
+    @Test
+    public void testToJson() {
+        assertEquals("{\"weight\":19.5," +
+                "\"MER\":0," +
+                "\"Diet Caloric Content (KCal/kg)\":0," +
+                "\"pet name\":\"Pretzl\"}",
+                testPet1.toJson().toString());
     }
 
 
