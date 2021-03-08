@@ -2,14 +2,14 @@ package model;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-/*import persistence.Writable;*/
+import persistence.Writable;
 
 import java.util.ArrayList;
 
 /*
 Represents a user profile with a number of pets
  */
-public class PetList /*implements Writable*/ {
+public class PetList implements Writable {
     private ArrayList<Pet> myPets;
     private String ownerName;
 

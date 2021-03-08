@@ -1,12 +1,12 @@
 package model;
 
 import org.json.JSONObject;
-/*import persistence.Writable;*/
+import persistence.Writable;
 
 // Represents a cat or dog having a name and stored information relating to its energy requirements:
 // species, gender, neuter status, age in years, weight (kg), resting energy requirements, energy multiplicative factor,
 // BCS (body condition score)
-public class Pet /*implements Writable*/ {
+public class Pet implements Writable {
     private String petName;
     private double weightInKg;
     private double mer;

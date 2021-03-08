@@ -5,6 +5,7 @@
       <map />
     </option>
   </component>
+  <component name="ExternalSystem" linkedProjectPath="$MODULE_DIR$/../PomodoroCatCafe/src" rootProjectPath="$MODULE_DIR$/../PomodoroCatCafe/src" />
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">

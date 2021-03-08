@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PetListTest {
     private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
@@ -40,10 +42,17 @@ class PetListTest {
         assertFalse(testPetList1.duplicateName("peaches"));
     }
 
+    @Test
+    public void testOwnerName() {
+        assertEquals(null,testPetList1.getOwnerName());
+        testPetList1.setOwnerName("Jason");
+        assertEquals("Jason",testPetList1.getOwnerName());
+    }
+
 
     @Test
     //tests adding, removing, printing, getting size from PetList
-    public void testAddPet() {
+    public void testAddAndRemovePet() {
         testPetList0.add(testPet1);
         assertEquals(1, testPetList0.getPetArray().size());
         assertEquals(1, testPetList0.getNumPets());
@@ -55,6 +64,16 @@ class PetListTest {
         testPetList0.remove(testPet1);
         assertEquals(1, testPetList0.getPetArray().size());
         assertEquals(1, testPetList0.getNumPets());
+    }
+
+    @Test
+    public void testToJson() {
+        testPetList1.setOwnerName("Jason");
+        assertEquals("{\"pets\":[{\"weight\":19.5," +
+                "\"MER\":0," +
+                "\"Diet Caloric Content (KCal/kg)\":0," +
+                "\"pet name\":\"Pretzl\"}]," +
+                "\"ownername\":\"Jason\"}",testPetList1.toJson().toString());
     }
 
 }

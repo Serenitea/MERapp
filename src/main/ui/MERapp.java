@@ -8,16 +8,58 @@ import persistence.JsonWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // Pet Calorie Calculator application
 // user interface methods
 public class MERapp {
     private static final String JSON_STORE = "./data/profiles.json";
+    private static final List<String> PET_MENU = Arrays.asList(
+            "e -> edit pet name",
+            "w -> edit pet weight",
+            "d -> add or change diet information",
+            "r -> remove this pet",
+            "b -> back to Main Menu");
+    private static final List<String> WELCOME_MENU = Arrays.asList(
+            "\nl -> Load profile",
+            "n -> Create a new profile",
+            "q -> quit",
+            "\n---------------------------");
+    private static final List<String> MAIN_MENU = Stream.of("\n\nOptions:",
+            "\nm -> Manage Current Pets",
+            "n -> Add a New Pet",
+            "r -> Remove a Pet",
+            "s -> Save Session",
+            "b -> exit current profile",
+            "q -> quit").collect(Collectors.toList());
+    private static final List<String> MAIN_MENU_HEADER = Arrays.asList(
+            "\n------------------------------------",
+            "Pet Weight Management App Main Menu",
+            "\n------------------------------------");
+    private static final List<String> PET_MENU_HEADER = Arrays.asList(
+            "\n------------------------------------",
+            "Choose a Pet to Manage - Menu",
+            "\n------------------------------------");
+    private static List<String> MANAGE_PET_MENU_HEADER = Arrays.asList(
+            "\n------------------------------------",
+            "Manage a Pet - Menu",
+            "\n------------------------------------");
     private static final Scanner scanner = new Scanner(System.in);
-    private PetList petList;
     private final JsonWriter jsonWriter;
     private final JsonReader jsonReader;
+    private PetList petList;
+
+    /*
+EFFECTS: prints Application menu header
+ */
+    private void printMenu(List<String> menu) {
+        for (String s : menu) {
+            System.out.println(s);
+        }
+    }
 
     public MERapp() {
         petList = new PetList();
@@ -34,7 +76,7 @@ public class MERapp {
             if (petList.getNumPets() == 0) {
                 keepGoing = introMenu();
             } else {
-                displayMainPetMenu();
+                displayMainMenu();
                 String command = scanner.next();
                 if (command.equalsIgnoreCase("q")) {
                     keepGoing = false;
@@ -64,14 +106,8 @@ public class MERapp {
     EFFECTS: display intro menu options: load saved profile, create new profile, or quit
      */
     private void displayIntroMenu() {
-        printMenuHeader();
-        for (String s : Arrays.asList(
-                "\nl -> Load profile",
-                "n -> Create a new profile",
-                "q -> quit",
-                "\n---------------------------")) {
-            System.out.println(s);
-        }
+        printMenu(MAIN_MENU_HEADER);
+        printMenu(WELCOME_MENU);
     }
 
     /*
@@ -110,8 +146,8 @@ public class MERapp {
                 addNewPet();
                 break;
             case "m":
-                //view all pets name
-                viewPet();
+                //view all pets
+                managePets();
                 break;
             case "r":
                 removePetChoose();
@@ -119,7 +155,7 @@ public class MERapp {
             case "s":
                 savePetList();
                 break;
-            case "p":
+            case "b":
                 clearPetList();
                 break;
             default:
@@ -128,7 +164,6 @@ public class MERapp {
         }
     }
 
-    //todo
     /*
     MODIFIES: this
     EFFECTS: remove all data from fields of petList
@@ -167,7 +202,7 @@ public class MERapp {
             newOwnerName();
         } else {
             String ownerName = petList.getOwnerName();
-            System.out.printf("Please confirm that the current profile name is correct (Y/N): %s",
+            System.out.printf("Please confirm that the current profile name is correct (Y/N): %s \n",
                     ownerName);
             boolean confirmNameBool = processConfirmName();
             if (!confirmNameBool) {
@@ -205,46 +240,29 @@ public class MERapp {
     }
 
     /*
-    EFFECTS: prints Application menu header
-     */
-    private void printMenuHeader() {
-        System.out.println("\n------------------------------------");
-        System.out.println("Pet Weight Management App Main Menu");
-        System.out.println("------------------------------------");
-    }
-
-
-    /*
     EFFECTS: prints options for main menu if a profile is currently loaded
      */
-    private void displayMainPetMenu() {
-        printMenuHeader();
+    private void displayMainMenu() {
+        printMenu(MAIN_MENU_HEADER);
         System.out.println("\nPlease input the key corresponding to an option.");
         System.out.println("\nCurrent Pets:");
         printPetNames(", ");
-        for (String s : Arrays.asList(
-                "\n\nOptions:",
-                "\nm -> Manage Current Pets",
-                "n -> Add a New Pet",
-                "r -> Remove a Pet",
-                "s -> Save Session",
-                "p -> exit current profile",
-                "q -> quit")) {
-            System.out.println(s);
-        }
+        printMenu(MAIN_MENU);
     }
+
+
 
     /*
     REQUIRES: at least 1 Pet in newPetList
     EFFECTS: prints all pets and allows user to select a pet to edit or (b) to main menu
     */
-    private void viewPet() {
-        System.out.println("CURRENT PETS:");
-        printAllPetsAllFields();
-
+    private void managePets() {
+        printMenu(PET_MENU_HEADER);
         System.out.println("Select a pet to edit by entering the corresponding number, or b to return to main menu");
+        System.out.println("CURRENT PETS:");
         printPetSelect();
-        selectOrBack(); //todo fix
+        System.out.println("b - back to main menu");
+        selectAPetOrBack();
     }
 
     /*
@@ -252,18 +270,24 @@ public class MERapp {
     EFFECTS: processes user input for the viewPet menu -
              either an integer corresponding to a pet to edit or (b)ack to main menu
      */
-    private void selectOrBack() {
-        String selection = scanner.next();
-        try {
-            int petIndex = Integer.parseInt(selection);
-            editPet(petIndex);
-        } catch (NumberFormatException e) {
-            if ("b".equals(selection)) {
-                System.out.println("Back to main menu.");
-            } else {
+    private void selectAPetOrBack() {
+        boolean invalidCommand = true;
+        while (invalidCommand) {
+            String selection = scanner.next();
+            try {
+                int petIndex = Integer.parseInt(selection);
+                editPet(petIndex);
+                invalidCommand = false;
+            } catch (NumberFormatException e) {
+                if ("b".equals(selection)) {
+                    System.out.println("Back to main menu.");
+                    invalidCommand = false;
+                } else {
+                    System.out.println("Selection not valid...");
+                }
+            } catch (IndexOutOfBoundsException e) {
                 System.out.println("Selection not valid...");
             }
-            System.out.println("Back to main menu.");
         }
     }
 
@@ -276,12 +300,14 @@ public class MERapp {
 
         while (stayHere) {
             printPetFields(selectedPet);
-            displayPetMenu();
+            printMenu(MANAGE_PET_MENU_HEADER);
+            printMenu(PET_MENU);
+            //displayPetMenu();
             String command = scanner.next();
             if ((command.equals("b")) && (petList.getNumPets() == 0)) {
                 stayHere = false;
             } else {
-                processPetMenuCommand(command, selectedPet);
+                stayHere = processPetMenuCommand(command, selectedPet);
             }
         }
     }
@@ -291,31 +317,31 @@ public class MERapp {
     EFFECTS: displays a pet's option menu
      */
     private void displayPetMenu() {
-        System.out.println("e -> edit pet name");
-        System.out.println("w -> edit pet weight");
-        System.out.println("d -> add or change diet information");
-        System.out.println("r -> remove this pet");
-        System.out.println("b -> back to Main Menu");
+        for (String s : PET_MENU) {
+            System.out.println(s);
+        }
     }
 
     /*
     REQUIRES: at least 1 Pet in newPetList
     EFFECTS: processes user input for a pet's option menu
      */
-    private void processPetMenuCommand(String command, Pet selectedPet) {
+    private boolean processPetMenuCommand(String command, Pet selectedPet) {
         switch (command) {
             case "d":
                 editDiet(selectedPet);
-                break;
+                return true;
             case "e":
                 editName(selectedPet);
-                break;
+                return true;
             case "w":
                 editWeight(selectedPet);
-                break;
+                return true;
             case "r":
                 removeSelectedPet(selectedPet);
-                break;
+                return false;
+            case "b":
+                return false;
             default:
                 throw new IllegalStateException("Unexpected value: " + command);
         }
@@ -399,7 +425,6 @@ public class MERapp {
         return null;
     }
 
-
     /*REQUIRES: newPetList Array has >= 1 Pet
     MODIFIES: this
     EFFECTS: changes the weight field of the Pet object to new user input*/
@@ -478,7 +503,7 @@ public class MERapp {
         }
     }
 
-/*    *//*
+    /*    *//*
     EFFECTS: changes given string to be first letter capitalized followed by lower case letters.
      *//*
     public String capitalizeFirst(String str) {
