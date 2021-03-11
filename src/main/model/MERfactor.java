@@ -1,7 +1,8 @@
 package model;
 
-import java.lang.Math;
-
+//standard ranges of nutritional factors used in calculating MER
+//currently unintegrated into main app and only applies to dogs.
+@SuppressWarnings("SpellCheckingInspection")
 public enum MERfactor {
     ADULTNEUTERED(1.6, 1.6),
     ADULTINTACT(1.8, 1.8),
@@ -22,16 +23,16 @@ public enum MERfactor {
         this.highFactor = maxFactor;
     }
 
+    public double getAvgFactor() {
+        return ((highFactor + lowFactor) / 2);
+    }
+
     public double getLowFactor() {
         return lowFactor;
     }
 
     public double getHighFactor() {
         return highFactor;
-    }
-
-    public double estFactor() {
-        return (lowFactor + highFactor) / 2;
     }
 
 
