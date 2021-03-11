@@ -31,12 +31,4 @@ class MERfactorTest {
         assertEquals(1.8,MERfactor.WEIGHTGAIN.getHighFactor());
         assertEquals(5, MERfactor.ACTIVE.getHighFactor());
     }
-
-    @Test
-    void values() {
-    }
-
-    @Test
-    void valueOf() {
-    }
 }
