@@ -1,11 +1,15 @@
 package model;
 
 //import model.MERfactor;
-//Currently not integrated into main app.
-//Class of calculation functions for determining nutritional requirements of a pet.
+//Currently not integrated into main app. temporarily static factor TEMP_FACTOR of 1.6, to be replaced by MERfactor
+//Class representing a MER calculation for determining nutritional requirements of a pet.
 public class MERcalc {
     private double factor;
     private static double TEMP_FACTOR = 1.6;
+
+    public MERcalc() {
+        this.factor = TEMP_FACTOR;
+    }
 
     /*
     EFFECTS: returns a pet's RER given weight in kg. RER = 70*(wt^0.75)
@@ -23,7 +27,19 @@ public class MERcalc {
         return factor * rer;
     }
 
-/*    public double estFactor() {
-        return 1.6; //placeholder static var until later
-    }*/
+    /*
+    MODIFIES: this
+    EFFECTS: sets factor of the MER calculation to the inputted value.
+     */
+    public void setFactor(double newFactor) {
+        this.factor = newFactor;
+    }
+
+    /*
+    EFFECTS: returns factor of initialized MER calculation
+     */
+    public double getFactor() {
+        return this.factor;
+    }
+
 }

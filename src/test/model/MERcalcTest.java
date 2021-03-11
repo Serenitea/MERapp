@@ -12,6 +12,8 @@ class MERcalcTest {
     private double testWeight;
     private double nullWeight;
     private static double TEMP_FACTOR = 1.6;
+    private static double TEST_FACTOR = 1.7;
+    private MERcalc testMERcalc = new MERcalc();
 
     @BeforeEach
     void setUp() {
@@ -30,4 +32,11 @@ class MERcalcTest {
         assertEquals(0,findMER(nullWeight, TEMP_FACTOR));
         assertEquals(70*Math.pow(this.testWeight, 0.75), findMER(testWeight, TEMP_FACTOR));
     }
+
+    @Test
+    void testSetFactor() {
+        testMERcalc.setFactor(1.7);
+        assertEquals(1.7, testMERcalc.getFactor());
+    }
+
 }
