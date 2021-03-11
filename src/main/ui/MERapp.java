@@ -82,6 +82,7 @@ EFFECTS: prints Application menu header
                 displayMainMenu();
                 String command = scanner.next();
                 if (command.equalsIgnoreCase("q")) {
+                    promptConfirmSave();
                     keepGoing = false;
                 } else {
                     processMainMenuCommand(command);
@@ -89,6 +90,14 @@ EFFECTS: prints Application menu header
             }
         }
         System.out.println("\nGoodbye!");
+    }
+
+    /*
+    MODIFIES: ./data/profiles.json
+    EFFECTS:
+     */
+    private void promptConfirmSave() {
+
     }
 
     /*
@@ -182,7 +191,6 @@ EFFECTS: prints Application menu header
         petList = new PetList();
     }
 
-    //todo json method
     /*
     REQUIRES: at least 1 pet in petList
     MODIFIES: ./data.profiles.json
@@ -205,7 +213,6 @@ EFFECTS: prints Application menu header
         MODIFIES: this
         EFFECTS: prompts user to input owner name if name is null, or confirm current user name with option to edit
          */
-    //todo
     private void confirmOwnerName() {
         if (petList.getOwnerName().equals("")) {
             System.out.println("This profile currently has no owner name.");

@@ -11,10 +11,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class JsonReaderTest {
+public class JsonReaderTest extends JsonTest{
     private static final String JSON_STORE = "./test.json";
     private PetList testPetList = new PetList();
-    private JsonWriter jsonWriter;
     private JsonReader jsonReader;
 /*
     private Pet testPet1;
@@ -48,12 +47,7 @@ public class JsonReaderTest {
     EFFECTS: Given the expected fields of a Pet and the Pet itself, check if the
     field values check expected values
      */
-    public void checkPet(String petName, double weightInKg, double mer, double dietCalPerKg, Pet pet) {
-        assertEquals(petName, pet.getPetName());
-        assertEquals(weightInKg, pet.getWeight());
-        assertEquals(mer, pet.getmer());
-        assertEquals(dietCalPerKg, pet.getDietCalPerKg());
-    }
+
 
     @BeforeEach
     public void setUp() {

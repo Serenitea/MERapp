@@ -1,17 +1,17 @@
 {
-  "pets": [
-    {
-      "weight": 29,
-      "MER": 0,
-      "Diet Caloric Content (KCal/kg)": 0,
-      "pet name": "Loot"
-    },
-    {
-      "weight": 2,
-      "MER": 0,
-      "Diet Caloric Content (KCal/kg)": 0,
-      "pet name": "burdock"
-    }
-  ],
-  "ownername": "Sam"
+    "pets": [
+        {
+            "weight": 10.1,
+            "MER": 0,
+            "Diet Caloric Content (KCal/kg)": 0,
+            "pet name": "Zoomer"
+        },
+        {
+            "weight": 15.3,
+            "MER": 0,
+            "Diet Caloric Content (KCal/kg)": 0,
+            "pet name": "Trist"
+        }
+    ],
+    "ownername": "Singer"
 }

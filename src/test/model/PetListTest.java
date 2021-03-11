@@ -44,7 +44,7 @@ class PetListTest {
 
     @Test
     public void testOwnerName() {
-        assertEquals(null,testPetList1.getOwnerName());
+        assertEquals("",testPetList1.getOwnerName());
         testPetList1.setOwnerName("Jason");
         assertEquals("Jason",testPetList1.getOwnerName());
     }
