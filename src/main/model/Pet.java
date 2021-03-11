@@ -43,26 +43,27 @@ public class Pet implements Writable {
         return this.weightInKg;
     }
 
-
-    public double getDietCalPerKg() {
-        return this.dietCalPerKg;
-    }
-
-    public double getmer() {
-        return this.mer;
-    }
-
-    /*
-            MODIFIES: this.weightInKg
-            EFFECTS: change's the weight (kg) of a pet.
-             */
-
     public void setWeight(
             double newWeight) {
         this.weightInKg = newWeight;
     }
 
+    public double getDietCalPerKg() {
+        return this.dietCalPerKg;
+    }
 
+    /*
+    MODIFIES: this
+    EFFECTS: changes the weight (kg) of a pet.
+     */
+
+    public double getMER() {
+        return this.mer;
+    }
+    /*
+    MODIFIES: this
+    EFFECTS: changes the MER of a pet.
+     */
     public void setMER(double newMER) {
         this.mer = newMER;
     }
@@ -75,12 +76,17 @@ public class Pet implements Writable {
         this.petName = newName;
     }
 
-
+    /*
+    MODIFIES: this
+    EFFECTS: changes a pet's diet (the dietCalPerKg field) to the inputted number argument.
+    */
     public void setNewDiet(double newPetDiet) {
         this.dietCalPerKg = newPetDiet;
     }
 
-
+    /*
+    EFFECTS: returns the Json string serialization of a Pet
+     */
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
         json.put("pet name", petName);
@@ -89,15 +95,6 @@ public class Pet implements Writable {
         json.put("Diet Caloric Content (KCal/kg)", dietCalPerKg);
         return json;
     }
-
-
-    /*
-     MODIFIES: this
-     EFFECTS: changes the current diet of the pet to the newly inputted one.
-     */
-//    public void addDiet(Diet newDiet) {
-//        this.currentDiet = newDiet;
-//    }
 
 }
 

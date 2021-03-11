@@ -13,7 +13,7 @@ public class JsonTest {
     public void checkPet(String petName, double weightInKg, double mer, double dietCalPerKg, Pet pet) {
         assertEquals(petName, pet.getPetName());
         assertEquals(weightInKg, pet.getWeight());
-        assertEquals(mer, pet.getmer());
+        assertEquals(mer, pet.getMER());
         assertEquals(dietCalPerKg, pet.getDietCalPerKg());
     }
 

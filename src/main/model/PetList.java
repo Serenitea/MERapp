@@ -78,7 +78,9 @@ public class PetList implements Writable {
         this.ownerName = ownerName;
     }
 
-
+    /*
+    EFFECTS: returns the Json string serialization of a PetList
+     */
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
         json.put("ownername", this.ownerName);
@@ -86,6 +88,9 @@ public class PetList implements Writable {
         return json;
     }
 
+    /*
+    EFFECTS: returns a JSONObject that serializes the myPets petArray of a PetList
+     */
     private JSONArray petsToJson() {
         JSONArray jsonArray = new JSONArray();
 

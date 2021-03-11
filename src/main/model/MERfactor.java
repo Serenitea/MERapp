@@ -4,6 +4,7 @@ package model;
 //currently unintegrated into main app and only applies to dogs.
 @SuppressWarnings("SpellCheckingInspection")
 public enum MERfactor {
+    //enumeration of lifestyles and their associated min/max factor range
     ADULTNEUTERED(1.6, 1.6),
     ADULTINTACT(1.8, 1.8),
     INACTIVE(1.2, 1.4),

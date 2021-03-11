@@ -72,13 +72,13 @@ class PetTest {
     @Test
     public void testMER() {
 
-        assertEquals(0, testPet1.getmer());
+        assertEquals(0, testPet1.getMER());
         testPet1.setMER(42.0);
-        assertEquals(42.0, testPet1.getmer());
+        assertEquals(42.0, testPet1.getMER());
 
-        assertEquals(0, testPet2.getmer());
+        assertEquals(0, testPet2.getMER());
         testPet2.setMER(4.0);
-        assertEquals(4.0, testPet2.getmer());
+        assertEquals(4.0, testPet2.getMER());
     }
 
 
