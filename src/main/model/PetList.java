@@ -17,7 +17,7 @@ public class PetList implements Writable {
     /*EFFECTS: constructs a PetList with an empty myPets ArrayList.*/
     public PetList() {
         this.myPets = new ArrayList<>();
-
+        this.ownerName = "";
     }
 
     /*

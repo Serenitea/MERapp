@@ -21,16 +21,16 @@ and track their pet's weight progression over time. The obesity epidemic, affect
  - prompt to save current Pet to json file when 
  exiting from individual Pet menu back to Main Menu
  - upon application launch, option to load all pets from json file or start new account
- - prompt to save data upon exiting the program
+ - prompt to save data upon exiting from a loaded profile before heading back to intro menu.
  
  
 ### *Todo wishlist:*
- - more traits for pets - e.g. species, gender, lifestyle
+ - more trait fields for pets - e.g. species, gender, neuter status lifestyle, body condition score, 
  - track a pet's current weight with an attached date
  - *feeding history*
- - *user profiles*
  - *edit weight history*
- - *more options for diet caloric measurements - kcalPerKg*
+ - *more options for diet caloric measurements - kcalPerCup, kcalPerCan*
  - *imperial measurement conversions*
  - *expand on diet traits - e.g. fields for brand, wet/dry, etc.*
- - add the current diet's caloric count and output recommended feeding amount
+ - *add the current diet's caloric count and output recommended feeding amount*
+      - *need RER and MER calculation functions and possibly stored vars*

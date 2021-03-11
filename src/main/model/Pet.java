@@ -4,7 +4,7 @@ import org.json.JSONObject;
 import persistence.Writable;
 
 // Represents a cat or dog having a name and stored information relating to its energy requirements:
-// species, gender, neuter status, age in years, weight (kg), resting energy requirements, energy multiplicative factor,
+//  weight (kg), resting energy requirements, energy multiplicative factor,
 // BCS (body condition score)
 public class Pet implements Writable {
     private String petName;
@@ -13,11 +13,9 @@ public class Pet implements Writable {
     private double dietCalPerKg;
 
     /*
-     REQUIRES:
-     - petName has a non-zero length, no existing pet with identical name
-     - body weight in kg > 0
+     Initializes Pet object with user inputted fields for name and weight.
+     New Pets are initialized with 0 mer and 0 dietCalPerKg.
      */
-    //TODO add dietCal
 
     public Pet(String petName,
                double weightInKg
@@ -31,7 +29,7 @@ public class Pet implements Writable {
     ) {
         this.petName = petName;
         this.weightInKg = weightInKg;
-        //this.mer = MERcalc.findMER(weightInKg); todo
+        //this.mer = MERcalc.findMER(weightInKg);
         this.mer = 0;
         this.dietCalPerKg = 0;
     }

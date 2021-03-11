@@ -61,6 +61,9 @@ EFFECTS: prints Application menu header
         }
     }
 
+    /*
+    EFFECTS: constructs the Pet MER application and initializes json I/O
+     */
     public MERapp() {
         petList = new PetList();
         jsonReader = new JsonReader(JSON_STORE);
@@ -68,7 +71,7 @@ EFFECTS: prints Application menu header
         runApp();
     }
 
-    //EFFECTS: directs user to intro menu if no profile currently loaded or the main menu of options
+    //EFFECTS: directs user to intro menu if no profile currently loaded, the main menu of options, or exit
     private void runApp() {
         boolean keepGoing = true;
 
@@ -89,6 +92,7 @@ EFFECTS: prints Application menu header
     }
 
     /*
+    REQUIRES: no currently loaded profile (empty petList)
     EFFECTS: displays and processes input for intro menu
      */
     private Boolean introMenu() {
@@ -99,10 +103,11 @@ EFFECTS: prints Application menu header
         } else {
             processIntroMenuCommand(command);
         }
-        return true; //todo
+        return true;
     }
 
     /*
+    REQUIRES: no currently loaded profile (empty petList)
     EFFECTS: display intro menu options: load saved profile, create new profile, or quit
      */
     private void displayIntroMenu() {
@@ -111,6 +116,7 @@ EFFECTS: prints Application menu header
     }
 
     /*
+    REQUIRES: no currently loaded profile (empty petList)
     EFFECTS: processes commands of intro menu given a valid non-exit command
      */
     private void processIntroMenuCommand(String command) {
@@ -125,7 +131,11 @@ EFFECTS: prints Application menu header
         }
     }
 
-    //todo json
+    /*
+    REQUIRES: no currently loaded profile (empty petList)
+    MODIFIES: this
+    EFFECTS: loads previously saved profiles from local json storage path
+     */
     private void loadSavedPetList() {
         try {
             petList = jsonReader.read();
@@ -197,7 +207,7 @@ EFFECTS: prints Application menu header
          */
     //todo
     private void confirmOwnerName() {
-        if (petList.getOwnerName() == null) {
+        if (petList.getOwnerName().equals("")) {
             System.out.println("This profile currently has no owner name.");
             newOwnerName();
         } else {
