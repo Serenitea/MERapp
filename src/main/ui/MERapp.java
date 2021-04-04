@@ -8,6 +8,7 @@ import persistence.JsonWriter;
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
@@ -20,10 +21,12 @@ import java.util.stream.Stream;
 // user interface methods
 public class MERapp extends JFrame {
     JFrame frame;
+    Panels.IntroMenuPanel introPanel;
     ChangeListener changeListener;
     JTabbedPane sourceTabbedPane;
     int index;
     JTabbedPane tabbedPane;
+    ActionListener introListener;
     GridBagConstraints gridBagConstraints;
     private static final int GRIDXVAL = 0;
     private static final int GRIDYVAL = 0;
@@ -88,6 +91,54 @@ EFFECTS: prints Application menu header
 
     //todo doc
     private void initializeFrame() {
+        frame = new JFrame("Pet Weight Management App GUI");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(FRAMEWIDTH, FRAMEHEIGHT);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = GRIDXVAL;
+        gridBagConstraints.gridy = GRIDYVAL;
+
+//        tabbedPane = new Tabs.InitializeTabs();
+//        frame.getContentPane().add(tabbedPane);
+//        frame.getContentPane().setLayout(new GridBagLayout());
+
+        initializeListener();
+        introPanel = new Panels.IntroMenuPanel(introListener);
+        frame.getContentPane().add(introPanel);
+        frame.setVisible(true);
+
+    }
+
+    private void initializeListener() {
+        introListener = e -> {
+            String buttonName = e.getActionCommand();
+            switch (buttonName) {
+                case "New Profile":
+                    createNewProfile();
+                    break;
+                case "Load saved profile":
+                    loadProfile();
+                    break;
+                default:
+                    break;
+            }
+        };
+    }
+
+
+    public void loadProfile() {
+        System.out.println("load profile");
+    }
+
+    public void goToMainMenu() {
+    }
+
+    public void createNewProfile() {
+        System.out.println("create new profile");
+    }
+
+/*    //todo doc
+    private void initializeFrame() {
         frame = new JFrame("Tabbed Pane Frame Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(FRAMEWIDTH, FRAMEHEIGHT);
@@ -96,16 +147,17 @@ EFFECTS: prints Application menu header
         gridBagConstraints.gridy = GRIDYVAL;
 
         tabbedPane = new Tabs.InitializeTabs();
-        frame.add(tabbedPane);
+        frame.getContentPane().add(tabbedPane);
 //        frame.getContentPane().setLayout(new GridBagLayout());
 
 
 //        initializeListener();
 //        tabbedPane.addChangeListener(changeListener);
-
+        tabbedPane.getAccessibleContext();
         frame.setVisible(true);
 
-    }
+
+    }*/
 
     /*private void initializeListener() {
         changeListener = new ChangeListener() {

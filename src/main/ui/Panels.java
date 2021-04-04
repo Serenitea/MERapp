@@ -1,6 +1,7 @@
 package ui;
 
 import javax.swing.*;
+import java.awt.event.ActionListener;
 
 public abstract class Panels extends JPanel {
 
@@ -9,8 +10,28 @@ public abstract class Panels extends JPanel {
     }
 
     public static class IntroMenuPanel extends Panels {
-        public IntroMenuPanel() {
-            this.add(new JLabel("Intro Menu here"));
+        ActionListener actionListener;
+        JButton newProfileButton = new JButton("New Profile");
+        JButton mainMenuButton = new JButton("Load saved profile");
+        JButton closeButton = new JButton("Exit");
+
+        public IntroMenuPanel(ActionListener actionListener) {
+            this.actionListener = actionListener;
+            this.add(new JLabel("Intro Text here"));
+            closeButton.addActionListener(e -> System.exit(0));
+            newProfileButton.addActionListener(actionListener);
+            mainMenuButton.addActionListener(actionListener);
+            this.add(newProfileButton);
+            this.add(mainMenuButton);
+            this.add(closeButton);
+        }
+
+        public JButton getNewProfileButton() {
+            return newProfileButton;
+        }
+
+        public JButton getMainMenuButton() {
+            return mainMenuButton;
         }
     }
 
