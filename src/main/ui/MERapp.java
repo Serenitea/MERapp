@@ -6,7 +6,6 @@ import persistence.JsonReader;
 import persistence.JsonWriter;
 
 import javax.swing.*;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
@@ -17,22 +16,17 @@ import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static ui.Tabs.*;
+
 // Pet Calorie Calculator application
 // user interface methods
 public class MERapp extends JFrame {
-    JFrame frame;
-    Panels.IntroMenuPanel introPanel;
-    ChangeListener changeListener;
-    JTabbedPane sourceTabbedPane;
-    int index;
-    JTabbedPane tabbedPane;
-    ActionListener introListener;
-    GridBagConstraints gridBagConstraints;
-    private static final int GRIDXVAL = 0;
-    private static final int GRIDYVAL = 0;
     public static final int FRAMEWIDTH = 450;
     public static final int FRAMEHEIGHT = 600;
-
+    public static final int MINWIDTH = 450;
+    public static final int MINHEIGHT = 400;
+    private static final int GRIDXVAL = 0;
+    private static final int GRIDYVAL = 0;
     private static final String JSON_STORE = "./data/profiles.json";
     private static final List<String> PET_MENU = Arrays.asList(
             "e -> edit pet name",
@@ -60,24 +54,25 @@ public class MERapp extends JFrame {
             "\n------------------------------------",
             "Choose a Pet to Manage - Menu",
             "\n------------------------------------");
+    private static final Scanner scanner = new Scanner(System.in);
     private static List<String> MANAGE_PET_MENU_HEADER = Arrays.asList(
             "\n------------------------------------",
             "Manage a Pet - Menu",
             "\n------------------------------------");
-    private static final Scanner scanner = new Scanner(System.in);
+    JFrame frame;
+    IntroMenuPanel introPanel;
+    ActionListener actionListener;
+    ActionListener mainMenuListener;
+    JTabbedPane sourceTabbedPane;
+    JList petJList;
+    int index;
+    JTabbedPane tabbedPane;
+    ActionListener introListener;
+    GridBagLayout gridBagLayout;
     private JsonWriter jsonWriter;
     private JsonReader jsonReader;
     private PetList petList;
 
-
-    /*
-EFFECTS: prints Application menu header
- */
-    private void printMenu(List<String> menu) {
-        for (String s : menu) {
-            System.out.println(s);
-        }
-    }
 
     /*
     EFFECTS: constructs the Pet MER application and initializes json I/O
@@ -89,27 +84,28 @@ EFFECTS: prints Application menu header
         runApp();
     }
 
+    /*
+EFFECTS: prints Application menu header
+ */
+    private void printMenu(List<String> menu) {
+        for (String s : menu) {
+            System.out.println(s);
+        }
+    }
+
     //todo doc
     private void initializeFrame() {
         frame = new JFrame("Pet Weight Management App GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(FRAMEWIDTH, FRAMEHEIGHT);
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = GRIDXVAL;
-        gridBagConstraints.gridy = GRIDYVAL;
-
-//        tabbedPane = new Tabs.InitializeTabs();
-//        frame.getContentPane().add(tabbedPane);
-//        frame.getContentPane().setLayout(new GridBagLayout());
-
-        initializeListener();
-        introPanel = new Panels.IntroMenuPanel(introListener);
+        initIntroListener();
+        introPanel = new IntroMenuPanel(introListener);
         frame.getContentPane().add(introPanel);
+        frame.setMinimumSize(new Dimension(MINWIDTH, MINHEIGHT));
         frame.setVisible(true);
 
     }
 
-    private void initializeListener() {
+    private void initIntroListener() {
         introListener = e -> {
             String buttonName = e.getActionCommand();
             switch (buttonName) {
@@ -120,15 +116,80 @@ EFFECTS: prints Application menu header
                     loadProfile();
                     break;
                 default:
+                    JOptionPane.showMessageDialog(frame,"Unknown event");
                     break;
             }
         };
     }
 
+    private void initMainListener() {
+        mainMenuListener = e -> {
+            String buttonName = e.getActionCommand();
+            switch (buttonName) {
+                case "Add New Pet":
+                    addNewPetEvent();
+                    break;
+                case "Remove a Pet":
+                    removePetEvent();
+                    break;
+                case "Save Session":
+                    saveSessionEvent();
+                    break;
+                default:
+                    JOptionPane.showMessageDialog(frame,"Unknown event");
+                    break;
+            }
+        };
+    }
 
+    private void saveSessionEvent() {
+        System.out.println("save session");
+    }
+
+    private void removePetEvent() {
+        System.out.println("remove pet");
+    }
+
+    private void addNewPetEvent() {
+        System.out.println("add pet");
+    }
+
+    //todo docs
     public void loadProfile() {
         System.out.println("load profile");
+        loadSavedPetList();
+        frame.remove(introPanel);
+        initMainListener();
+        tabbedPane = initializeTabs();
+        frame.getContentPane().add(tabbedPane);
+//        initGridBag();
+
+
+
+        gridBagLayout = new GridBagLayout();
+
+        frame.setSize(FRAMEWIDTH, FRAMEHEIGHT);
+        frame.setVisible(true);
     }
+
+    /*//todo docs
+    private void initGridBag() {
+        gridBagLayout = new GridBagLayout();
+        frame.setLayout(gridBagLayout);
+        GridBagConstraints gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = GRIDXVAL;
+        gridBagConstraints.gridy = GRIDYVAL;
+
+    }*/
+
+    private JTabbedPane initializeTabs() {
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.addTab("Main Dashboard", new MainMenuPanel(mainMenuListener, petJList));
+//        tabs.addTab("New Pet", addPetTab(actionListener));
+//        tabs.addTab("Edit a Pet", editPetTab(actionListener));
+        return tabs;
+    }
+
 
     public void goToMainMenu() {
     }
