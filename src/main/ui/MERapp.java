@@ -5,6 +5,9 @@ import model.PetList;
 import persistence.JsonReader;
 import persistence.JsonWriter;
 
+import javax.swing.*;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
@@ -15,7 +18,18 @@ import java.util.stream.Stream;
 
 // Pet Calorie Calculator application
 // user interface methods
-public class MERapp {
+public class MERapp extends JFrame {
+    JFrame frame;
+    ChangeListener changeListener;
+    JTabbedPane sourceTabbedPane;
+    int index;
+    JTabbedPane tabbedPane;
+    GridBagConstraints gridBagConstraints;
+    private static final int GRIDXVAL = 0;
+    private static final int GRIDYVAL = 0;
+    public static final int FRAMEWIDTH = 450;
+    public static final int FRAMEHEIGHT = 600;
+
     private static final String JSON_STORE = "./data/profiles.json";
     private static final List<String> PET_MENU = Arrays.asList(
             "e -> edit pet name",
@@ -48,9 +62,10 @@ public class MERapp {
             "Manage a Pet - Menu",
             "\n------------------------------------");
     private static final Scanner scanner = new Scanner(System.in);
-    private final JsonWriter jsonWriter;
-    private final JsonReader jsonReader;
+    private JsonWriter jsonWriter;
+    private JsonReader jsonReader;
     private PetList petList;
+
 
     /*
 EFFECTS: prints Application menu header
@@ -65,10 +80,48 @@ EFFECTS: prints Application menu header
     EFFECTS: constructs the Pet MER application and initializes json I/O
      */
     public MERapp() {
+        super("Pet Weight Management App");
+        initializeFields();
+        initializeFrame();
+        runApp();
+    }
+
+    //todo doc
+    private void initializeFrame() {
+        frame = new JFrame("Tabbed Pane Frame Test");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(FRAMEWIDTH, FRAMEHEIGHT);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = GRIDXVAL;
+        gridBagConstraints.gridy = GRIDYVAL;
+
+        tabbedPane = new Tabs.InitializeTabs();
+        frame.add(tabbedPane);
+//        frame.getContentPane().setLayout(new GridBagLayout());
+
+
+//        initializeListener();
+//        tabbedPane.addChangeListener(changeListener);
+
+        frame.setVisible(true);
+
+    }
+
+    /*private void initializeListener() {
+        changeListener = new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent changeEvent) {
+                sourceTabbedPane = (JTabbedPane)changeEvent.getSource();
+                index = sourceTabbedPane.getSelectedIndex();
+                System.out.println("Tab changed to: " + sourceTabbedPane.getTitleAt(index));
+            }
+        };
+    }*/
+
+    private void initializeFields() {
         petList = new PetList();
         jsonReader = new JsonReader(JSON_STORE);
         jsonWriter = new JsonWriter(JSON_STORE);
-        runApp();
     }
 
     //EFFECTS: directs user to intro menu if no profile currently loaded, the main menu of options, or exit
@@ -266,8 +319,6 @@ EFFECTS: prints Application menu header
         printPetNames(", ");
         printMenu(MAIN_MENU);
     }
-
-
 
     /*
     REQUIRES: at least 1 Pet in newPetList
