@@ -6,27 +6,30 @@ import persistence.JsonReader;
 import persistence.JsonWriter;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ui.Tabs.*;
+import static java.awt.GridBagConstraints.BOTH;
 
 // Pet Calorie Calculator application
+//John Zukowski - the Definitive Guide to Java Swing (2005, Apress)
+//Kishori Sharan - Beginning Java 8 APIs, Extensions and Libraries (2014, Apress)
+//https://docs.oracle.com/javase/tutorial/uiswing/layout/gridbag.html#gridbagConstraints
+//resource used: https://docs.oracle.com/javase/tutorial/uiswing/examples/components/SplitPaneDemoProject/src/components/SplitPaneDemo.java
 // user interface methods
-public class MERapp extends JFrame {
+public class MERapp extends JFrame implements Runnable {
     public static final int FRAMEWIDTH = 450;
     public static final int FRAMEHEIGHT = 600;
     public static final int MINWIDTH = 450;
     public static final int MINHEIGHT = 400;
-    private static final int GRIDXVAL = 0;
-    private static final int GRIDYVAL = 0;
     private static final String JSON_STORE = "./data/profiles.json";
     private static final List<String> PET_MENU = Arrays.asList(
             "e -> edit pet name",
@@ -60,11 +63,12 @@ public class MERapp extends JFrame {
             "Manage a Pet - Menu",
             "\n------------------------------------");
     JFrame frame;
-    IntroMenuPanel introPanel;
+    Tabs.IntroMenuPanel introPanel;
     ActionListener actionListener;
     ActionListener mainMenuListener;
-    JTabbedPane sourceTabbedPane;
-    JList petJList;
+    ListSelectionListener listSelectionListener;
+    MainMenuTab mainMenuTab;
+    JSplitPane managePetSplitPanes;
     int index;
     JTabbedPane tabbedPane;
     ActionListener introListener;
@@ -72,16 +76,53 @@ public class MERapp extends JFrame {
     private JsonWriter jsonWriter;
     private JsonReader jsonReader;
     private PetList petList;
+    private ArrayList<Pet> petArrayList;
+    private JList<String> petJList; //for listSelectionListener
+    int selectedIndex;
 
+    private JList<String> toNamesJList(ArrayList<Pet> petArrayList) {
+        ListModel<String> petNameListModel = castNameToListModel(petArrayList);
+        JList<String> petNameJList = new JList<String>(petNameListModel);
+        return petNameJList;
+    }
 
     /*
     EFFECTS: constructs the Pet MER application and initializes json I/O
      */
     public MERapp() {
         super("Pet Weight Management App");
+
+        run();
+//        EventQueue.invokeLater(this::run);
+    }
+
+    private static void updatePetDisplay(int selectedIndex,
+                                         ArrayList<Pet> petArrayList) {
+        JPanel newPetDisplay = new JPanel();
+        Pet displayedPet = petArrayList.get(selectedIndex);
+        String petName = displayedPet.getPetName();
+        JLabel petNameJLabel = new JLabel(String.format("Selected Pet: %s", petName));
+        newPetDisplay.add(petNameJLabel);
+
+        System.out.println("update pet display - test");
+    }
+
+    /**
+     * When an object implementing interface <code>Runnable</code> is used
+     * to create a thread, starting the thread causes the object's
+     * <code>run</code> method to be called in that separately executing
+     * thread.
+     * <p>
+     * The general contract of the method <code>run</code> is that it may
+     * take any action whatsoever.
+     *
+     * @see Thread#run()
+     */
+    @Override
+    public void run() {
         initializeFields();
         initializeFrame();
-        runApp();
+//        runApp(); //will be deleted later
     }
 
     /*
@@ -98,11 +139,10 @@ EFFECTS: prints Application menu header
         frame = new JFrame("Pet Weight Management App GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         initIntroListener();
-        introPanel = new IntroMenuPanel(introListener);
+        introPanel = new Tabs.IntroMenuPanel(introListener);
         frame.getContentPane().add(introPanel);
         frame.setMinimumSize(new Dimension(MINWIDTH, MINHEIGHT));
         frame.setVisible(true);
-
     }
 
     private void initIntroListener() {
@@ -116,7 +156,7 @@ EFFECTS: prints Application menu header
                     loadProfile();
                     break;
                 default:
-                    JOptionPane.showMessageDialog(frame,"Unknown event");
+                    JOptionPane.showMessageDialog(frame, "Unknown event");
                     break;
             }
         };
@@ -136,11 +176,28 @@ EFFECTS: prints Application menu header
                     saveSessionEvent();
                     break;
                 default:
-                    JOptionPane.showMessageDialog(frame,"Unknown event");
+                    JOptionPane.showMessageDialog(frame, "Unknown event");
                     break;
             }
         };
+
+        listSelectionListener = e -> {
+            petJList = (JList) e.getSource();
+            selectedIndex = petJList.getSelectedIndex();
+            System.out.println(petJList.getSelectedIndex());
+            /*if (petJList.getLastVisibleIndex() != -1) {
+
+//            updatePetDisplay(selectedIndex, petArrayList);
+                System.out.println(selectedIndex);
+                updateSplitPane(petJList, selectedIndex);
+            } else {
+                System.out.println("no pets in profile");
+            }*/
+
+        };
+
     }
+
 
     private void saveSessionEvent() {
         System.out.println("save session");
@@ -165,29 +222,75 @@ EFFECTS: prints Application menu header
 //        initGridBag();
 
 
-
         gridBagLayout = new GridBagLayout();
 
         frame.setSize(FRAMEWIDTH, FRAMEHEIGHT);
         frame.setVisible(true);
     }
 
-    /*//todo docs
-    private void initGridBag() {
-        gridBagLayout = new GridBagLayout();
-        frame.setLayout(gridBagLayout);
-        GridBagConstraints gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = GRIDXVAL;
-        gridBagConstraints.gridy = GRIDYVAL;
+    /*REQUIRES: no currently loaded profile (empty petList)
+    MODIFIES: this
+    EFFECTS: loads previously saved profiles from local json storage path*/
 
-    }*/
+    private void loadSavedPetList() {
+        try {
+            petList = jsonReader.read();
+            petArrayList = petList.getPetArray();
+            System.out.println("Loaded " + petList.getOwnerName() + " from " + JSON_STORE);
+        } catch (IOException e) {
+            System.out.println("Unable to read from file: " + JSON_STORE);
+        }
+    }
+
 
     private JTabbedPane initializeTabs() {
+        initializeSplitPane(toNamesJList(petArrayList));
+        this.mainMenuTab = new MainMenuTab(petArrayList,
+                mainMenuListener,
+                listSelectionListener, managePetSplitPanes);
         JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Main Dashboard", new MainMenuPanel(mainMenuListener, petJList));
+        tabs.addTab("Main Dashboard", mainMenuTab);
 //        tabs.addTab("New Pet", addPetTab(actionListener));
 //        tabs.addTab("Edit a Pet", editPetTab(actionListener));
         return tabs;
+    }
+
+    private void initializeSplitPane(JList<String> toNamesJList) {
+        petJList = toNamesJList;
+        petJList.addListSelectionListener(listSelectionListener);
+        managePetSplitPanes = new JSplitPane();
+        JPanel displayPane = new JPanel();
+        JScrollPane leftPane = new JScrollPane(toNamesJList);
+        managePetSplitPanes.setLeftComponent(leftPane);
+        if (toNamesJList.getLastVisibleIndex() != -1) {
+            displayPane.add(new JLabel("No pet selected"));
+            managePetSplitPanes.setRightComponent(displayPane);
+        } else {
+            displayPane.add(new JLabel("No pets in profile"));
+            managePetSplitPanes.setRightComponent(displayPane);
+        }
+    }
+
+    private void updateSplitPane(JList<String> toNamesJList, int index) {
+        petJList = toNamesJList;
+        petJList.addListSelectionListener(listSelectionListener);
+        managePetSplitPanes = new JSplitPane();
+        JScrollPane leftPane = new JScrollPane(toNamesJList);
+        managePetSplitPanes.setLeftComponent(leftPane);
+
+        JPanel displayPane = new JPanel();
+        displayPane.add(new JLabel("pet display here" + index));
+        managePetSplitPanes.setRightComponent(displayPane);
+    }
+
+    private static ListModel<String> castNameToListModel(ArrayList<Pet> petArrayList) {
+        DefaultListModel<String> petListModel = new DefaultListModel<>();
+        //todo abstract method maybe
+        for (Pet pet : petArrayList) {
+            petListModel.addElement(pet.getPetName());
+        }
+
+        return petListModel;
     }
 
 
@@ -198,27 +301,6 @@ EFFECTS: prints Application menu header
         System.out.println("create new profile");
     }
 
-/*    //todo doc
-    private void initializeFrame() {
-        frame = new JFrame("Tabbed Pane Frame Test");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(FRAMEWIDTH, FRAMEHEIGHT);
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = GRIDXVAL;
-        gridBagConstraints.gridy = GRIDYVAL;
-
-        tabbedPane = new Tabs.InitializeTabs();
-        frame.getContentPane().add(tabbedPane);
-//        frame.getContentPane().setLayout(new GridBagLayout());
-
-
-//        initializeListener();
-//        tabbedPane.addChangeListener(changeListener);
-        tabbedPane.getAccessibleContext();
-        frame.setVisible(true);
-
-
-    }*/
 
     /*private void initializeListener() {
         changeListener = new ChangeListener() {
@@ -233,10 +315,15 @@ EFFECTS: prints Application menu header
 
     private void initializeFields() {
         petList = new PetList();
+        petArrayList = petList.getPetArray();
         jsonReader = new JsonReader(JSON_STORE);
         jsonWriter = new JsonWriter(JSON_STORE);
     }
 
+    //todo docs
+    //4 rows 3 columns
+
+/*
     //EFFECTS: directs user to intro menu if no profile currently loaded, the main menu of options, or exit
     private void runApp() {
         boolean keepGoing = true;
@@ -258,18 +345,18 @@ EFFECTS: prints Application menu header
         System.out.println("\nGoodbye!");
     }
 
-    /*
+    *//*
     MODIFIES: ./data/profiles.json
     EFFECTS:
-     */
+     *//*
     private void promptConfirmSave() {
 
     }
 
-    /*
+    *//*
     REQUIRES: no currently loaded profile (empty petList)
     EFFECTS: displays and processes input for intro menu
-     */
+     *//*
     private Boolean introMenu() {
         displayIntroMenu();
         String command = scanner.next();
@@ -281,19 +368,19 @@ EFFECTS: prints Application menu header
         return true;
     }
 
-    /*
+    *//*
     REQUIRES: no currently loaded profile (empty petList)
     EFFECTS: display intro menu options: load saved profile, create new profile, or quit
-     */
+     *//*
     private void displayIntroMenu() {
         printMenu(MAIN_MENU_HEADER);
         printMenu(WELCOME_MENU);
     }
 
-    /*
+    *//*
     REQUIRES: no currently loaded profile (empty petList)
     EFFECTS: processes commands of intro menu given a valid non-exit command
-     */
+     *//*
     private void processIntroMenuCommand(String command) {
         switch (command) {
             case "n":
@@ -306,24 +393,10 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*
-    REQUIRES: no currently loaded profile (empty petList)
-    MODIFIES: this
-    EFFECTS: loads previously saved profiles from local json storage path
-     */
-    private void loadSavedPetList() {
-        try {
-            petList = jsonReader.read();
-            System.out.println("Loaded " + petList.getOwnerName() + " from " + JSON_STORE);
-        } catch (IOException e) {
-            System.out.println("Unable to read from file: " + JSON_STORE);
-        }
-    }
-
-    /*
+    *//*
     MODIFIES: this
      EFFECTS: processes user command from main menu of options
-     */
+     *//*
     private void processMainMenuCommand(String command) {
         switch (command) {
             case "n":
@@ -349,19 +422,19 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*
+    *//*
     MODIFIES: this
     EFFECTS: remove all data from fields of petList
-     */
+     *//*
     private void clearPetList() {
         petList = new PetList();
     }
 
-    /*
+    *//*
     REQUIRES: at least 1 pet in petList
     MODIFIES: ./data.profiles.json
     EFFECTS: confirms user name then saves petList to save path
-     */
+     *//*
     private void savePetList() {
         confirmOwnerName();
         try {
@@ -374,11 +447,11 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*
+    *//*
         REQUIRES: at least 1 pet in petList
         MODIFIES: this
         EFFECTS: prompts user to input owner name if name is null, or confirm current user name with option to edit
-         */
+         *//*
     private void confirmOwnerName() {
         if (petList.getOwnerName().equals("")) {
             System.out.println("This profile currently has no owner name.");
@@ -394,21 +467,21 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*
+    *//*
     REQUIRES: assumes there is at least 1 Pet in petList.
     MODIFIES: this
     EFFECTS: sets owner name field of petList to inputted String.
-     */
+     *//*
     private void newOwnerName() {
         System.out.println("Please enter your new name:");
         String inputName = scanner.next();
         petList.setOwnerName(inputName);
     }
 
-    /*
+    *//*
     REQUIRES: valid String variable in the owner name field of petList.
     EFFECTS: processes user input for confirming the current owner name
-     */
+     *//*
     private boolean processConfirmName() {
         String confirmNameStr = scanner.next();
         confirmNameStr = confirmNameStr.toLowerCase();
@@ -422,9 +495,9 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*
+    *//*
     EFFECTS: prints options for main menu if a profile is currently loaded
-     */
+     *//*
     private void displayMainMenu() {
         printMenu(MAIN_MENU_HEADER);
         System.out.println("\nPlease input the key corresponding to an option.");
@@ -433,10 +506,10 @@ EFFECTS: prints Application menu header
         printMenu(MAIN_MENU);
     }
 
-    /*
+    *//*
     REQUIRES: at least 1 Pet in newPetList
     EFFECTS: prints all pets and allows user to select a pet to edit or (b) to main menu
-    */
+    *//*
     private void managePets() {
         printMenu(PET_MENU_HEADER);
         System.out.println("Select a pet to edit by entering the corresponding number, or b to return to main menu");
@@ -446,11 +519,11 @@ EFFECTS: prints Application menu header
         selectAPetOrBack();
     }
 
-    /*
+    *//*
     REQUIRES: inputted int < number of pets in newPetList
     EFFECTS: processes user input for the viewPet menu -
              either an integer corresponding to a pet to edit or (b)ack to main menu
-     */
+     *//*
     private void selectAPetOrBack() {
         boolean invalidCommand = true;
         while (invalidCommand) {
@@ -472,9 +545,9 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*REQUIRES: newPetList Array has >= 1 Pet
+    *//*REQUIRES: newPetList Array has >= 1 Pet
     MODIFIES: this
-    EFFECTS: changes 1 field of a Pet object to new user input*/
+    EFFECTS: changes 1 field of a Pet object to new user input*//*
     private void editPet(int petIndex) {
         Pet selectedPet = petList.getPetArray().get(petIndex);
         boolean stayHere = true;
@@ -493,20 +566,20 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*
+    *//*
     REQUIRES: at least 1 Pet in newPetList
     EFFECTS: displays a pet's option menu
-     */
+     *//*
     private void displayPetMenu() {
         for (String s : PET_MENU) {
             System.out.println(s);
         }
     }
 
-    /*
+    *//*
     REQUIRES: at least 1 Pet in newPetList
     EFFECTS: processes user input for a pet's option menu
-     */
+     *//*
     private boolean processPetMenuCommand(String command, Pet selectedPet) {
         switch (command) {
             case "d":
@@ -528,11 +601,11 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*
+    *//*
     REQUIRES: newPetList Array created
     MODIFIES: this
     EFFECTS: adds new Pet object to newPetList Array via user inputs for fields
-    */
+    *//*
     private void addNewPet() {
         boolean keepgoingnaming = true;
 
@@ -553,19 +626,19 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*
+    *//*
     REQUIRES: unique pet name from existing Pets in newPetList
     EFFECTS: creates new Pet based on name argument and field values from user input
-     */
+     *//*
     private Pet instantiateNewPet(String petName) {
         System.out.println("Enter new pet's weight (kg):");
         double petWtKg = scanner.nextDouble();
         return new Pet(petName, petWtKg);
     }
 
-    /*REQUIRES: newPetList Array has >= 1 Pet
+    *//*REQUIRES: newPetList Array has >= 1 Pet
     MODIFIES: this
-    EFFECTS: removes Pet object to newPetList Array*/
+    EFFECTS: removes Pet object to newPetList Array*//*
     //todo add removal confirmation
     private void removePetChoose() {
         String removedPetName;
@@ -580,11 +653,11 @@ EFFECTS: prints Application menu header
         System.out.printf("%s successfully removed.%n", removedPetName);
     }
 
-    /*
+    *//*
     REQUIRES: newPetList has at least 1 Pet object
     MODIFIES: this
     EFFECTS: removes a selected Pet from newPetList
-     */
+     *//*
     private void removeSelectedPet(Pet selectedPet) {
         String removedPetName = selectedPet.getPetName();
         petList.remove(selectedPet);
@@ -592,10 +665,10 @@ EFFECTS: prints Application menu header
         System.out.printf("%s successfully removed.%n", removedPetName);
     }
 
-    /*
+    *//*
     REQUIRES: newPetList Array has >= 1 Pet
     EFFECTS: prints a list of pet names and returns a user-selected Pet from newPetList, or b -> prev menu
-    */
+    *//*
     private Pet selectPet() {
         if (scanner.hasNextInt()) {
             int petIndex = scanner.nextInt();
@@ -606,9 +679,9 @@ EFFECTS: prints Application menu header
         return null;
     }
 
-    /*REQUIRES: newPetList Array has >= 1 Pet
+    *//*REQUIRES: newPetList Array has >= 1 Pet
     MODIFIES: this
-    EFFECTS: changes the weight field of the Pet object to new user input*/
+    EFFECTS: changes the weight field of the Pet object to new user input*//*
     private void editWeight(Pet petToEdit) {
         // edit weight
         System.out.println("Enter new pet weight:");
@@ -616,9 +689,9 @@ EFFECTS: prints Application menu header
         petToEdit.setWeight(newWeight);
     }
 
-    /*REQUIRES: newPetList Array has >= 1 Pet
+    *//*REQUIRES: newPetList Array has >= 1 Pet
     MODIFIES: this
-    EFFECTS: changes the name field of the Pet object to new user input*/
+    EFFECTS: changes the name field of the Pet object to new user input*//*
     private void editName(Pet petToEdit) {
         // edit name
         System.out.println("Enter new pet name:");
@@ -635,9 +708,9 @@ EFFECTS: prints Application menu header
         petToEdit.setNewDiet(newPetDiet);
     }
 
-    /*
+    *//*
     EFFECTS: prints the list of Pet names in newPetList and their array index.
-     */
+     *//*
     private void printPetSelect() {
         for (int i = 0; petList.getNumPets() > i; i++) {
             Pet currentPet = petList.getPetArray().get(i);
@@ -645,10 +718,10 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*
+    *//*
     REQUIRES: assumes there is at least 1 Pet in petList
     EFFECTS: prints the list of Pet names in newPetList.
-     */
+     *//*
     private void printPetNames(String delimiter) {
         //only one pet
         if (petList.getNumPets() == 1) {
@@ -665,31 +738,171 @@ EFFECTS: prints Application menu header
         }
     }
 
-    /*
+    *//*
     EFFECTS: Prints all fields for a Pet.
-    */
+    *//*
     public void printPetFields(Pet petToPrint) {
         System.out.println("\nName: " + petToPrint.getPetName());
         System.out.println("Weight: " + petToPrint.getWeight() + " kg\n");
         System.out.println("Diet caloric content: " + petToPrint.getDietCalPerKg() + " kCal/kg\n");
     }
 
-    /*
+    *//*
     EFFECTS: prints all pets with all of their fields to the user console.
-    */
+    *//*
     public void printAllPetsAllFields() {
         for (int i = 0; i < petList.getNumPets(); i++) {
             Pet printPet = petList.getPetArray().get(i);
             printPetFields(printPet);
         }
-    }
-
-    /*    *//*
-    EFFECTS: changes given string to be first letter capitalized followed by lower case letters.
-     *//*
-    public String capitalizeFirst(String str) {
-        str = str.substring(0,1).toUpperCase() + str.substring(1).toLowerCase();
-        return str;
     }*/
 
+
+    public static class MainMenuTab extends JPanel {
+        JSplitPane managePetsPanel;
+        Boolean emptyPetList;
+        ActionListener actionListener;
+        GridBagLayout gridBagLayout = new GridBagLayout();
+        GridBagConstraints gbc;
+        JButton newPetButton = new JButton("Add New Pet");
+        JButton editPetButton = new JButton("Remove a Pet");
+        JButton savePetButton = new JButton("Save Session");
+        ListModel<String> petListModel;
+//        JPanel petDisplayPanel = new JPanel();
+
+        public MainMenuTab(ArrayList<Pet> petArrayList, ActionListener actionListener,
+                           ListSelectionListener listSelectionListener, JSplitPane splitPane1) {
+            managePetsPanel = splitPane1;
+            emptyPetList = (petArrayList.size() <= 0);
+            this.setLayout(gridBagLayout);
+            gbc = new GridBagConstraints();
+            gbc.fill = BOTH;
+            this.actionListener = actionListener;
+//            this.petListModel = castToListModel(petArrayList);
+            addActionListeners();
+            this.petListModel = castNameToListModel(petArrayList);
+            this.addWithConstraints(mainMenuHeader(), 3, 0, 0);
+//            this.managePetsPanel = new ManagePetsPanel(petListModel, listSelectionListener);
+            this.addWithConstraints(managePetsPanel, 3, 0, 1);
+            this.addWithConstraints(newPetButton, 1, 0, 2);
+            this.addWithConstraints(editPetButton, 1, 1, 2);
+            this.addWithConstraints(savePetButton, 1, 2, 2);
+            this.addWithConstraints(Tabs.closeButton(actionListener), 3, 0, 3);
+        }
+
+        private static JLabel mainMenuHeader() {
+            JLabel label = new JLabel("Pet Weight Management App Dashboard", SwingConstants.CENTER);
+            return label;
+        }
+
+        public JPanel getManagePetsRightPane() {
+            return (JPanel) this.managePetsPanel.getRightComponent();
+        }
+
+        private void addWithConstraints(JComponent component, int gbcWidth, int gbcX, int gbcY) {
+            gbc.gridwidth = gbcWidth;
+            gbc.gridx = gbcX;
+            gbc.gridy = gbcY;
+            this.add(component, gbc);
+        }
+
+        private void addActionListeners() {
+            newPetButton.addActionListener(actionListener);
+            editPetButton.addActionListener(actionListener);
+            savePetButton.addActionListener(actionListener);
+        }
+
+        /*ListModel<Class<?>> model = myList.getModel();
+                for(int i = 0; i < model.getSize(); i++) {
+                System.out.println(model.getElementAt(i));*/
+
+        //Listens to the Jlist
+//            public int valueChanged(ListSelectionEvent e) {
+//                petJList = (JList)e.getSource();
+//                return petJList.getSelectedIndex();
+//            }
+//
+//            //Renders view of selected Pet
+//            protected void updateLabel(int index) {
+//                Pet pet = pe.get(index);
+//                String name = pets.get(index).getPetName();
+//                System.out.println(name);
+//            }
+//
+//            public JScrollPane petScrollSelect(JList<Pet> pets) {
+//                JScrollPane scrollPane = new JScrollPane(petList);
+//                return scrollPane;
+//            }
+    }
+//
+//    //todo docs
+//    public static class ManagePetsPanel extends JSplitPane {
+//        JList<String> petNameJList;
+//        JScrollPane leftPane;
+//        JPanel rightPane;
+//
+//        /*ListSelectionListener testlistSelectionListener = new ListSelectionListener() {
+//            @Override
+//            public void valueChanged(ListSelectionEvent e) {
+//                JList<Pet> petJList = (JList) e.getSource();
+//                int selectedIndex = petJList.getSelectedIndex();
+//                System.out.println("test" + selectedIndex);
+//                JScrollPane newDisplayPane = new JScrollPane();
+//                newDisplayPane.add(new JLabel(String.format("%d", selectedIndex)));
+//                setLeftPane(newDisplayPane);
+//                setLeftPane(leftPane);
+//
+//            }
+//        };*/
+//
+//        public ManagePetsPanel(ListModel<String> petNameListModel) {
+//            this.petNameJList = new JList<>(petNameListModel);
+//            this.petNameJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+//
+//            this.setOneTouchExpandable(true);
+//            //init both views
+//            this.leftPane = new JScrollPane(petNameJList);
+//            this.setLeftComponent(leftPane);
+//            initRightPane();
+//            this.setRightComponent(rightPane);
+//        }
+//
+//        //todo docs
+//        private void initRightPane() {
+//            JPanel displayPane = new JPanel();
+//            if (petNameJList.getLastVisibleIndex() != -1) {
+//                displayPane.add(new JLabel("No pet selected"));
+//                this.rightPane = displayPane;
+//            } else {
+//                displayPane.add(new JLabel("No pets in profile"));
+//                this.rightPane = displayPane;
+//            }
+//        }
+//
+//        public void setPetNameJList(JList<String> petNameJList) {
+//            this.petNameJList = petNameJList;
+//        }
+//
+//        public void setLeftPane(JScrollPane leftPane) {
+//            leftPane = leftPane;
+//            this.setLeftPane(leftPane);
+//        }
+//
+//        public void setRightPane(JPanel rightPane) {
+//            rightPane = rightPane;
+//            this.setRightPane(rightPane);
+//        }
+//
+//        public JList<String> getPetNameJList() {
+//            return petNameJList;
+//        }
+//
+//        public JScrollPane getLeftPane() {
+//            return leftPane;
+//        }
+//
+//        public JPanel getRightPane() {
+//            return rightPane;
+//        }
+//    }
 }
