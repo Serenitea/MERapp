@@ -81,6 +81,13 @@ class PetTest {
         assertEquals(4.0, testPet2.getMER());
     }
 
+    @Test
+    public void testPortraitPic() {
+        assertEquals("", testPet1.getPortraitPic());
+        testPet1.setPortraitPic("./data/null.png");
+        assertEquals("./data/null.png", testPet1.getPortraitPic() );
+    }
+
 
     @Test
     public void testToJson() {
