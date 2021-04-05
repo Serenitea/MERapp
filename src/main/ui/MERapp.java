@@ -182,9 +182,9 @@ EFFECTS: prints Application menu header
         };
 
         listSelectionListener = e -> {
-            petJList = (JList) e.getSource();
-            selectedIndex = petJList.getSelectedIndex();
-            System.out.println(petJList.getSelectedIndex());
+            JList<String> curPetJList = (JList) e.getSource();
+            selectedIndex = curPetJList.getSelectedIndex();
+            updateRightPane(selectedIndex);
             /*if (petJList.getLastVisibleIndex() != -1) {
 
 //            updatePetDisplay(selectedIndex, petArrayList);
@@ -271,13 +271,7 @@ EFFECTS: prints Application menu header
         }
     }
 
-    private void updateSplitPane(JList<String> toNamesJList, int index) {
-        petJList = toNamesJList;
-        petJList.addListSelectionListener(listSelectionListener);
-        managePetSplitPanes = new JSplitPane();
-        JScrollPane leftPane = new JScrollPane(toNamesJList);
-        managePetSplitPanes.setLeftComponent(leftPane);
-
+    private void updateRightPane(int index) {
         JPanel displayPane = new JPanel();
         displayPane.add(new JLabel("pet display here" + index));
         managePetSplitPanes.setRightComponent(displayPane);
