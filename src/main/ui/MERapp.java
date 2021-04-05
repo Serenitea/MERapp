@@ -20,10 +20,9 @@ import java.util.stream.Stream;
 import static java.awt.GridBagConstraints.BOTH;
 
 // Pet Calorie Calculator application
-//John Zukowski - the Definitive Guide to Java Swing (2005, Apress)
-//Kishori Sharan - Beginning Java 8 APIs, Extensions and Libraries (2014, Apress)
-//https://docs.oracle.com/javase/tutorial/uiswing/layout/gridbag.html#gridbagConstraints
-//resource used: https://docs.oracle.com/javase/tutorial/uiswing/examples/components/SplitPaneDemoProject/src/components/SplitPaneDemo.java
+//
+//
+//
 // user interface methods
 public class MERapp extends JFrame implements Runnable {
     public static final int FRAMEWIDTH = 450;
@@ -58,6 +57,8 @@ public class MERapp extends JFrame implements Runnable {
             "Choose a Pet to Manage - Menu",
             "\n------------------------------------");
     private static final Scanner scanner = new Scanner(System.in);
+    private static final String DEFAULTIMGURL = "./data/dog.png";
+    private static final Dimension PORTRAITPICSIZE = new Dimension(75, 75);
     private static List<String> MANAGE_PET_MENU_HEADER = Arrays.asList(
             "\n------------------------------------",
             "Manage a Pet - Menu",
@@ -177,7 +178,6 @@ EFFECTS: prints Application menu header
             JList<String> curPetJList = (JList) e.getSource();
             index = curPetJList.getSelectedIndex();
             updateRightPane();
-
         };
 
     }
@@ -186,7 +186,7 @@ EFFECTS: prints Application menu header
     private void saveSessionEvent() {
         System.out.println("save session");
     }
-    //TODO edit pet
+    //TODO#2 edit pet
     private void editPetEvent() {
         System.out.println("edit pet" + index);
         editPetTab = new JPanel();
@@ -194,7 +194,7 @@ EFFECTS: prints Application menu header
         tabbedPane.addTab("Edit pet", editPetTab);
 
     }
-    //todo later: make edit pet automatically on top
+    //todo later: make edit pet automatically on top - focus window
     //TODO remove pet
     //TODO can't open a edit pet if one is already open
     //TODO add new pet
@@ -204,6 +204,7 @@ EFFECTS: prints Application menu header
 
 
     //todo doc
+
     public void loadProfile() {
         System.out.println("load profile");
         loadSavedPetList();
@@ -225,6 +226,7 @@ EFFECTS: prints Application menu header
     EFFECTS: loads previously saved profiles from local json storage path*/
 
     //todo doc
+
     private void loadSavedPetList() {
         try {
             petList = jsonReader.read();
@@ -263,7 +265,17 @@ EFFECTS: prints Application menu header
         }
     }
 
+    //default pic
+    private ImageIcon generateDefaultPicLabel() {
+        ImageIcon imgFromURL = new ImageIcon(DEFAULTIMGURL);
+        Image img = imgFromURL.getImage();
+        Image scaledImg = img.getScaledInstance(PORTRAITPICSIZE.width, PORTRAITPICSIZE.height, Image.SCALE_FAST);
+        ImageIcon imgIcon = new ImageIcon(scaledImg);
+        return imgIcon;
+    }
+
     //todo doc
+    //TODO#1 display icon
     private void updateRightPane() {
         JPanel displayPane = new JPanel();
         displayPane.setLayout(new BoxLayout(displayPane, BoxLayout.Y_AXIS));
@@ -271,6 +283,11 @@ EFFECTS: prints Application menu header
         String petName = selectedPet.getPetName();
         double weight = selectedPet.getWeight();
         double dietCalPerKg = selectedPet.getDietCalPerKg();
+        if (selectedPet.getPortraitPic() == "") {
+            ImageIcon imgIcon = generateDefaultPicLabel();
+            JLabel portraitPic = new JLabel(imgIcon, SwingConstants.CENTER);
+            displayPane.add(portraitPic);
+        } //no else bc currently no functionality to add custom pic
         displayPane.add(new JLabel("Selected Pet: " + petName));
         displayPane.add(new JLabel("Weight (kg): " + weight));
         displayPane.add(new JLabel("Current diet calories (KCal/kg): " + dietCalPerKg));
