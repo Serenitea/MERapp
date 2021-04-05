@@ -69,6 +69,7 @@ public class MERapp extends JFrame implements Runnable {
     ListSelectionListener listSelectionListener;
     MainMenuTab mainMenuTab;
     JSplitPane managePetSplitPanes;
+    JPanel editPetTab;
     int index;
     JTabbedPane tabbedPane;
     ActionListener introListener;
@@ -160,8 +161,8 @@ EFFECTS: prints Application menu header
                 case "Add New Pet":
                     addNewPetEvent();
                     break;
-                case "Remove a Pet":
-                    removePetEvent();
+                case "Edit a Pet":
+                    editPetEvent();
                     break;
                 case "Save Session":
                     saveSessionEvent();
@@ -174,8 +175,8 @@ EFFECTS: prints Application menu header
 
         listSelectionListener = e -> {
             JList<String> curPetJList = (JList) e.getSource();
-            selectedIndex = curPetJList.getSelectedIndex();
-            updateRightPane(selectedIndex);
+            index = curPetJList.getSelectedIndex();
+            updateRightPane();
 
         };
 
@@ -185,16 +186,24 @@ EFFECTS: prints Application menu header
     private void saveSessionEvent() {
         System.out.println("save session");
     }
-    //TODO remove pet
-    private void removePetEvent() {
-        System.out.println("remove pet");
+    //TODO edit pet
+    private void editPetEvent() {
+        System.out.println("edit pet" + index);
+        editPetTab = new JPanel();
+        editPetTab.setLayout(new GridBagLayout());
+        tabbedPane.addTab("Edit pet", editPetTab);
+
     }
+    //todo later: make edit pet automatically on top
+    //TODO remove pet
+    //TODO can't open a edit pet if one is already open
     //TODO add new pet
     private void addNewPetEvent() {
         System.out.println("add pet");
     }
 
 
+    //todo doc
     public void loadProfile() {
         System.out.println("load profile");
         loadSavedPetList();
@@ -215,6 +224,7 @@ EFFECTS: prints Application menu header
     MODIFIES: this
     EFFECTS: loads previously saved profiles from local json storage path*/
 
+    //todo doc
     private void loadSavedPetList() {
         try {
             petList = jsonReader.read();
@@ -225,6 +235,7 @@ EFFECTS: prints Application menu header
         }
     }
 
+    //todo doc
     private JTabbedPane initializeTabs() {
         initializeSplitPane(toNamesJList(petArrayList));
         this.mainMenuTab = new MainMenuTab(petArrayList,
@@ -232,11 +243,10 @@ EFFECTS: prints Application menu header
                 listSelectionListener, managePetSplitPanes);
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("Main Dashboard", mainMenuTab);
-//        tabs.addTab("New Pet", addPetTab(actionListener));
-//        tabs.addTab("Edit a Pet", editPetTab(actionListener));
         return tabs;
     }
 
+    //todo doc
     private void initializeSplitPane(JList<String> toNamesJList) {
         petJList = toNamesJList;
         petJList.addListSelectionListener(listSelectionListener);
@@ -253,7 +263,8 @@ EFFECTS: prints Application menu header
         }
     }
 
-    private void updateRightPane(int index) {
+    //todo doc
+    private void updateRightPane() {
         JPanel displayPane = new JPanel();
         displayPane.setLayout(new BoxLayout(displayPane, BoxLayout.Y_AXIS));
         Pet selectedPet = petArrayList.get(index);
@@ -266,12 +277,13 @@ EFFECTS: prints Application menu header
         managePetSplitPanes.setRightComponent(displayPane);
     }
 
+    //todo doc
+    //EFFECTS: converts a Pet ArrayList to a ListModel of pet names
     private static ListModel<String> castNameToListModel(ArrayList<Pet> petArrayList) {
         DefaultListModel<String> petListModel = new DefaultListModel<>();
         for (Pet pet : petArrayList) {
             petListModel.addElement(pet.getPetName());
         }
-
         return petListModel;
     }
 
@@ -304,7 +316,6 @@ EFFECTS: prints Application menu header
         JButton editPetButton = new JButton("Edit a Pet");
         JButton savePetButton = new JButton("Save Session");
         ListModel<String> petListModel;
-//        JPanel petDisplayPanel = new JPanel();
         //todo doc
         public MainMenuTab(ArrayList<Pet> petArrayList, ActionListener actionListener,
                            ListSelectionListener listSelectionListener, JSplitPane splitPane1) {
@@ -314,18 +325,16 @@ EFFECTS: prints Application menu header
             gbc = new GridBagConstraints();
             gbc.fill = BOTH;
             this.actionListener = actionListener;
-//            this.petListModel = castToListModel(petArrayList);
             addActionListeners();
             this.petListModel = castNameToListModel(petArrayList);
             this.addWithConstraints(mainMenuHeader(), 3, 0, 0);
-//            this.managePetsPanel = new ManagePetsPanel(petListModel, listSelectionListener);
             this.addWithConstraints(managePetsPanel, 3, 0, 1);
             this.addWithConstraints(newPetButton, 1, 0, 2);
             this.addWithConstraints(editPetButton, 1, 1, 2);
             this.addWithConstraints(savePetButton, 1, 2, 2);
             this.addWithConstraints(Tabs.closeButton(actionListener), 3, 0, 3);
         }
-        //todo doc
+        //EFFECTS: returns a JLabel of the main menu's header (the app title)
         private static JLabel mainMenuHeader() {
             JLabel label = new JLabel("Pet Weight Management App Dashboard", SwingConstants.CENTER);
             return label;
