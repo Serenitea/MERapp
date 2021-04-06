@@ -25,11 +25,17 @@ public class Tabs extends JComponent {
         return tab;
     }
 
-
     //tododoc
     public static JButton closeButton(ActionListener actionListener) {
         JButton button = new JButton("Close App");
         button.addActionListener(e -> System.exit(0));
+        return button;
+    }
+
+    //tododoc
+    public static JButton exitProfileButton(ActionListener actionListener) {
+        JButton button = new JButton("Exit Profile");
+        button.addActionListener(actionListener);
         return button;
     }
     //tododoc
@@ -38,7 +44,52 @@ public class Tabs extends JComponent {
         //todo format the header
         return label;
     }
+    //tododoc
+    public static class NewProfilePanel extends JPanel {
+        private JTextField userNameField = new JTextField();
+        private final JLabel userNameLabel;
+        ActionListener actionListener;
+        JButton submitNewProfileButton = new JButton("Submit");
+        JButton cancelButton = new JButton("Cancel");
+        //tododoc
+        public NewProfilePanel(ActionListener actionListener) {
 
+            JPanel textPane = new JPanel();
+            JPanel inputPane = new JPanel();
+            JPanel buttonPane = new JPanel();
+
+            //TODO display user name on main dash
+            //TODO add exception to load new profile if there's no saved profile
+            textPane.add(new JLabel("Create New Profile"));
+            userNameLabel = new JLabel("User Name");
+            inputPane.setLayout(new GridLayout(1, 2));
+            inputPane.add(userNameLabel);
+            inputPane.add(userNameField);
+
+            this.actionListener = actionListener;
+            submitNewProfileButton.addActionListener(actionListener);
+            cancelButton.addActionListener(actionListener);
+            buttonPane.add(submitNewProfileButton);
+            buttonPane.add(cancelButton);
+
+            JPanel entirePane = new JPanel();
+            entirePane.setLayout(new BorderLayout());
+            entirePane.add(textPane, BorderLayout.NORTH);
+            entirePane.add(inputPane, BorderLayout.CENTER);
+            entirePane.add(buttonPane, BorderLayout.SOUTH);
+
+            //inputPane - needs fields
+            //actionListener - cancel, submit button actions
+
+            this.add(entirePane);
+
+        }
+
+        public String getProfileNameInput() {
+            return (userNameField.getText());
+        }
+
+    }
 
     //tododoc
     public static class IntroMenuPanel extends JPanel {
