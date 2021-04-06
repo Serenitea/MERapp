@@ -8,8 +8,12 @@ import persistence.JsonWriter;
 import javax.swing.*;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -81,6 +85,18 @@ public class MERapp extends JFrame implements Runnable {
     private ArrayList<Pet> petArrayList;
     private JList<String> petJList; //for listSelectionListener
     int selectedIndex;
+    private NumberFormat decimalFormat;
+    private JLabel weightLabel;
+    private JFormattedTextField weightField;
+    private JPanel labelPane;
+    private JPanel fieldPane;
+    private JSplitPane editPane;
+    private JTextField nameField;
+    private JFormattedTextField dietCalField;
+    private JLabel nameLabel;
+    private JLabel dietCalLabel;
+    private Pet currentPet;
+    private JScrollPane leftPane;
 
     private JList<String> toNamesJList(ArrayList<Pet> petArrayList) {
         ListModel<String> petNameListModel = castNameToListModel(petArrayList);
@@ -154,7 +170,7 @@ EFFECTS: prints Application menu header
             }
         };
     }
-
+    //TODO HEREHEREHEREHERE
     private void initMainListener() {
         mainMenuListener = e -> {
             String buttonName = e.getActionCommand();
@@ -163,12 +179,21 @@ EFFECTS: prints Application menu header
                     addNewPetEvent();
                     break;
                 case "Edit a Pet":
-                    editPetEvent();
-                    break;
+                    if (editPetTab == null) {
+                        //tabbedPane.indexOfTabComponent(editPetTab) == -1
+                        editPetEvent();
+                        break;
+                    } else {
+                        JOptionPane.showMessageDialog(frame, "You can only edit one pet at a time");
+                        break;
+                    }
+
                 case "Save Session":
+                    updatePetList();
                     saveSessionEvent();
                     break;
                 default:
+                    System.out.println(editPetTab);
                     JOptionPane.showMessageDialog(frame, "Unknown event");
                     break;
             }
@@ -181,20 +206,146 @@ EFFECTS: prints Application menu header
         };
 
     }
-
-    //TODO save
+    //TODO HEREHEREHERE
+    //TODO#2 save to Json
     private void saveSessionEvent() {
         System.out.println("save session");
+        //todo later ask for Owner name
+        try {
+            jsonWriter.open();
+            jsonWriter.write(petList);
+            jsonWriter.close();
+            System.out.println("Saved " + petList.getOwnerName() + "'s profile to " + JSON_STORE);
+        } catch (FileNotFoundException e) {
+            System.out.println("Unable to write to file: " + JSON_STORE);
+        }
+        System.out.println(petList.getPetArray().get(index).getPetName());
     }
-    //TODO#2 edit pet
+
+    //todo later formatting polish
+    //fields - name/string, weight/double, diet/double
+    //catch incorrect entries
+    //done button
+    //save button
+    //close edit window
     private void editPetEvent() {
+        String name = petArrayList.get(index).getPetName();
         System.out.println("edit pet" + index);
         editPetTab = new JPanel();
-        editPetTab.setLayout(new GridBagLayout());
-        tabbedPane.addTab("Edit pet", editPetTab);
+        Pet editPet = petArrayList.get(index);
 
+
+        //editPetTab labels
+        weightLabel = new JLabel("Weight (kg)");
+        nameLabel = new JLabel("Pet Name");
+        dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
+        ActionListener editPetListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String buttonName = e.getActionCommand();
+                switch (buttonName) {
+                    case "Okay":
+                        updatePetList();
+                        closeWindowEvent();
+                        break;
+                    case "Cancel":
+                        closeWindowEvent();
+                        break;
+                    default:
+                        JOptionPane.showMessageDialog(frame, "Unknown event");
+                }
+            }
+        };
+
+
+        //editPetTab buttons
+        JButton savePetButton = new JButton("Okay");
+        JButton backButton = new JButton("Cancel");
+        savePetButton.addActionListener(editPetListener);
+        backButton.addActionListener(editPetListener);
+
+        //editPetTab fields
+        decimalFormat = new DecimalFormat();
+        weightField = new JFormattedTextField(decimalFormat);
+        weightField.setValue(editPet.getWeight());
+        nameField = new JTextField();
+        nameField.setText(editPet.getPetName());
+        dietCalField = new JFormattedTextField(decimalFormat);
+        dietCalField.setValue(editPet.getDietCalPerKg());
+
+        //todo maybe, accessibility tool info
+//        weightLabel.setLabelFor(weightField);
+
+        //labels panel
+        labelPane = new JPanel();
+        labelPane.setLayout(new BoxLayout(labelPane, BoxLayout.Y_AXIS));
+        labelPane.add(weightLabel);
+        labelPane.add(nameLabel);
+        labelPane.add(dietCalLabel);
+
+        //text fields panel
+        fieldPane = new JPanel();
+        fieldPane.setLayout(new BoxLayout(fieldPane, BoxLayout.Y_AXIS));
+        fieldPane.add(weightField);
+        fieldPane.add(nameField);
+        fieldPane.add(dietCalField);
+
+        editPane = new JSplitPane();
+//        editPane.setLayout(new BoxLayout(editPane, BoxLayout.Y_AXIS));
+        editPane.setLeftComponent(labelPane);
+        editPane.setRightComponent(fieldPane);
+
+
+        //buttons panel, save or back
+        JPanel buttonPane = new JPanel(new GridLayout(1, 2));
+        buttonPane.add(savePetButton);
+        buttonPane.add(backButton);
+
+        //add panels to tab, labels on left, text fields on right
+//        editPetTab.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+//        editPetTab.setLayout();
+        editPetTab.add(editPane, BorderLayout.NORTH);
+        editPetTab.add(buttonPane, BorderLayout.SOUTH);
+
+        tabbedPane.addTab("Edit " + name, editPetTab);
+        tabbedPane.setSelectedComponent(editPetTab);
     }
-    //todo later: make edit pet automatically on top - focus window
+
+    private void updatePetList() {
+        System.out.println("update pet list");
+        //TODO get from fields
+        String newName = nameField.getText();
+//        double weightInput = weightField.
+        currentPet = petArrayList.get(index);
+        currentPet.setNewName(newName);
+//        currentPet.setNewDiet(newDiet);
+//        currentPet.setWeight(weightInput);
+        //update PetList, petArrayList, petJList
+    }
+
+    private void closeWindowEvent() {
+        System.out.println("close window");
+        tabbedPane.remove(editPetTab);
+        editPetTab = null;
+        System.out.println(petList.getPetArray().get(index).getPetName());
+        updateMainDash();
+        frame.setVisible(true);
+    }
+
+    //basically just left I think?
+    private void updateMainDash() {
+        System.out.println("updating dash");
+        updateLeftPane();
+        updateRightPane();
+    }
+    //updates the left panel of the splitPane with current data
+    private void updateLeftPane() {
+        petJList = toNamesJList(petArrayList);
+        petJList.addListSelectionListener(listSelectionListener);
+        leftPane = new JScrollPane(petJList);
+        managePetSplitPanes.setLeftComponent(leftPane);
+    }
+
     //TODO remove pet
     //TODO can't open a edit pet if one is already open
     //TODO add new pet
@@ -213,7 +364,6 @@ EFFECTS: prints Application menu header
         tabbedPane = initializeTabs();
         frame.getContentPane().add(tabbedPane);
 //        initGridBag();
-
 
         gridBagLayout = new GridBagLayout();
 
@@ -254,7 +404,7 @@ EFFECTS: prints Application menu header
         petJList.addListSelectionListener(listSelectionListener);
         managePetSplitPanes = new JSplitPane();
         JPanel displayPane = new JPanel();
-        JScrollPane leftPane = new JScrollPane(toNamesJList);
+        leftPane = new JScrollPane(petJList);
         managePetSplitPanes.setLeftComponent(leftPane);
         if (petArrayList.size() > 0) {
             displayPane.add(new JLabel("No pet selected"));
@@ -275,7 +425,7 @@ EFFECTS: prints Application menu header
     }
 
     //todo doc
-    //TODO#1 display icon
+    //todo latermaybe use SizeDisplayer to resize img
     private void updateRightPane() {
         JPanel displayPane = new JPanel();
         displayPane.setLayout(new BoxLayout(displayPane, BoxLayout.Y_AXIS));
