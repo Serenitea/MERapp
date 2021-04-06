@@ -1,10 +1,10 @@
 {
     "pets": [
         {
-            "weight": 29,
+            "weight": 20,
             "MER": 0,
-            "Diet Caloric Content (KCal/kg)": 0,
-            "pet name": "Looter"
+            "Diet Caloric Content (KCal/kg)": 10,
+            "pet name": "Twenty"
         },
         {
             "weight": 2.6,

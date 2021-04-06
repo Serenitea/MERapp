@@ -1,23 +1,22 @@
 package ui;
 
-import model.Pet;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 
 import static java.awt.GridBagConstraints.BOTH;
 
 // describes and initializes JTabbedPanes for The UI's main JFrame window
+//tododoc
 public class Tabs extends JComponent {
     public static final int WIDTH = 450;
     public static final int HEIGHT = 600;
-
+    //tododoc
     public Tabs() {
         super.setMinimumSize(new Dimension(WIDTH, HEIGHT));
     }
 
+    //tododoc
     public static JPanel addPetTab(ActionListener actionListener) {
         JPanel tab = new JPanel();
         tab.add(new JLabel("Enter information for new pet:"));
@@ -33,42 +32,33 @@ public class Tabs extends JComponent {
         }
     }*/
 
+    //tododoc
     public static JPanel editPetTab(ActionListener actionListener) {
         JPanel tab = new JPanel();
         return tab;
     }
 
+    //tododoc
     public static JButton closeButton(ActionListener actionListener) {
-        JButton button = new JButton("Exit");
+        JButton button = new JButton("Close App");
         button.addActionListener(e -> System.exit(0));
         return button;
     }
-
+    //tododoc
     public static JLabel header() {
         JLabel label = new JLabel("Pet Weight Management App", SwingConstants.CENTER);
         //todo format the header
         return label;
     }
 
-    public void arrayListToModel(ArrayList<Pet> petArrayList) {
-        ListModel model = new AbstractListModel() {
-            @Override
-            public int getSize() {
-                return petArrayList.size();
-            }
 
-            @Override
-            public Object getElementAt(int index) {
-                return petArrayList.get(index);
-            }
-        };
-    }
-
+    //tododoc
     public static class IntroMenuPanel extends JPanel {
         ActionListener actionListener;
         JButton newProfileButton = new JButton("New Profile");
         JButton mainMenuButton = new JButton("Load saved profile");
 
+        //tododoc
         public IntroMenuPanel(ActionListener actionListener) {
             this.setLayout(new GridBagLayout());
             GridBagConstraints gbc = new GridBagConstraints();
@@ -94,14 +84,7 @@ public class Tabs extends JComponent {
             gbc.gridy = 2;
             this.add(closeButton(actionListener), gbc);
         }
-/*
-        public JButton getNewProfileButton() {
-            return newProfileButton;
-        }
 
-        public JButton getMainMenuButton() {
-            return mainMenuButton;
-        }*/
     }
 
 }
