@@ -26,14 +26,15 @@ import static java.awt.GridBagConstraints.BOTH;
 //
 // user interface methods
 public class MERapp extends JFrame implements Runnable {
-    public static final int FRAMEWIDTH = 450;
-    public static final int FRAMEHEIGHT = 400;
-    public static final int MINWIDTH = 450;
-    public static final int MINHEIGHT = 400;
+    public static final int FRAME_WIDTH = 450;
+    public static final int FRAME_HEIGHT = 400;
+    public static final int MIN_WIDTH = 450;
+    public static final int MIN_HEIGHT = 400;
     private static final String JSON_STORE = "./data/profiles.json";
 
-    private static final String DEFAULTIMGURL = "./data/dog.png";
-    private static final Dimension PORTRAITPICSIZE = new Dimension(75, 75);
+    private static final String DEFAULT_PET_PORTRAIT_URL = "./data/dog.png";
+    private static final String FRAME_ICON_URL = "./data/paw.png";
+    private static final Dimension PORTRAIT_PIC_SIZE = new Dimension(75, 75);
     private static List<String> MANAGE_PET_MENU_HEADER = Arrays.asList(
             "\n------------------------------------",
             "Manage a Pet - Menu",
@@ -119,10 +120,12 @@ public class MERapp extends JFrame implements Runnable {
     private void initializeFrame() {
         frame = new JFrame("Pet Weight Management App GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        ImageIcon frameIcon = new ImageIcon(FRAME_ICON_URL);
+        frame.setIconImage(frameIcon.getImage());
         initIntroListener();
         introPanel.add(new Tabs.IntroMenuPanel(introListener));
         frame.getContentPane().add(introPanel);
-        frame.setMinimumSize(new Dimension(MINWIDTH, MINHEIGHT));
+        frame.setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
         frame.setVisible(true);
     }
 
@@ -161,7 +164,6 @@ public class MERapp extends JFrame implements Runnable {
         launchMainMenu();
     }
 
-    //TODO NEXT
     private void launchMainMenu() {
         initMainListener();
         tabbedPane = initializeTabs();
@@ -169,7 +171,7 @@ public class MERapp extends JFrame implements Runnable {
         frame.setContentPane(tabbedPane);
         gridBagLayout = new GridBagLayout();
 
-        frame.setSize(FRAMEWIDTH, FRAMEHEIGHT);
+        frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
         frame.setVisible(true);
     }
 
@@ -482,8 +484,7 @@ public class MERapp extends JFrame implements Runnable {
     EFFECTS: loads previously saved profiles from local json storage path*/
 
     //tododoc
-    //todo later add option to edit owner name
-    //TODO coming back soon
+    //TODO#1 NOW add option to edit owner name
     public void loadSavedProfile() {
         try {
             petList = jsonReader.read();
@@ -527,9 +528,9 @@ public class MERapp extends JFrame implements Runnable {
     //default pic
     //tododoc
     private ImageIcon generateDefaultPicLabel() {
-        ImageIcon imgFromURL = new ImageIcon(DEFAULTIMGURL);
+        ImageIcon imgFromURL = new ImageIcon(DEFAULT_PET_PORTRAIT_URL);
         Image img = imgFromURL.getImage();
-        Image scaledImg = img.getScaledInstance(PORTRAITPICSIZE.width, PORTRAITPICSIZE.height, Image.SCALE_FAST);
+        Image scaledImg = img.getScaledInstance(PORTRAIT_PIC_SIZE.width, PORTRAIT_PIC_SIZE.height, Image.SCALE_FAST);
         ImageIcon imgIcon = new ImageIcon(scaledImg);
         return imgIcon;
     }
@@ -560,7 +561,6 @@ public class MERapp extends JFrame implements Runnable {
         }
     }
 
-    //TODO#4 create new profile
     //todo later able to have multiple profiles (can add or remove)
     public void createNewProfile() {
         System.out.println("Create new profile");
@@ -569,7 +569,6 @@ public class MERapp extends JFrame implements Runnable {
         setJPanel(introPanel, newProfilePane);
         frame.setContentPane(introPanel);
         frame.setVisible(true);
-        //TODO HERE
 
     }
 

@@ -58,8 +58,7 @@ public class Tabs extends JComponent {
             JPanel inputPane = new JPanel();
             JPanel buttonPane = new JPanel();
 
-            //TODO display user name on main dash
-            //TODO add exception to load new profile if there's no saved profile
+            //TODO PHASE4 add exception to load new profile if there's no saved profile
             textPane.add(new JLabel("Create New Profile"));
             userNameLabel = new JLabel("User Name");
             inputPane.setLayout(new GridLayout(1, 2));
