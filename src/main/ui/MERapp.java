@@ -49,12 +49,13 @@ public class MERapp extends JFrame implements Runnable {
     JTabbedPane tabbedPane;
     ActionListener introListener;
     GridBagLayout gridBagLayout;
+    private JPanel addPetTab;
     private JsonWriter jsonWriter;
     private JsonReader jsonReader;
     private PetList petList;
     private ArrayList<Pet> petArrayList;
     private JList<String> petJList; //for listSelectionListener
-    private NumberFormat decimalFormat;
+    private NumberFormat decimalFormat = new DecimalFormat();
     private JLabel weightLabel;
     private JFormattedTextField weightField;
     private JPanel labelPane;
@@ -66,12 +67,9 @@ public class MERapp extends JFrame implements Runnable {
     private JLabel dietCalLabel;
     private Pet currentPet;
     private JScrollPane leftPane;
+    private JPanel newPetInputPane;
+    private JButton deletePet;
 
-    private JList<String> toNamesJList(ArrayList<Pet> petArrayList) {
-        ListModel<String> petNameListModel = castNameToListModel(petArrayList);
-        JList<String> petNameJList = new JList<String>(petNameListModel);
-        return petNameJList;
-    }
 
     /*
     EFFECTS: constructs the Pet MER application and initializes json I/O
@@ -84,6 +82,21 @@ public class MERapp extends JFrame implements Runnable {
 //        EventQueue.invokeLater(this::run);
     }
 
+    //tododoc
+    //EFFECTS: converts a Pet ArrayList to a ListModel of pet names
+    private static ListModel<String> castNameToListModel(ArrayList<Pet> petArrayList) {
+        DefaultListModel<String> petListModel = new DefaultListModel<>();
+        for (Pet pet : petArrayList) {
+            petListModel.addElement(pet.getPetName());
+        }
+        return petListModel;
+    }
+
+    private JList<String> toNamesJList(ArrayList<Pet> petArrayList) {
+        ListModel<String> petNameListModel = castNameToListModel(petArrayList);
+        JList<String> petNameJList = new JList<String>(petNameListModel);
+        return petNameJList;
+    }
 
     /**
      * When an object implementing interface <code>Runnable</code> is used
@@ -168,6 +181,7 @@ public class MERapp extends JFrame implements Runnable {
         };
 
     }
+
     //tododoc
     private void saveSessionEvent() {
         System.out.println("save session");
@@ -193,7 +207,7 @@ public class MERapp extends JFrame implements Runnable {
         String name = petArrayList.get(index).getPetName();
         System.out.println("edit pet" + index);
         editPetTab = new JPanel();
-        Pet editPet = petArrayList.get(index);
+        currentPet = petArrayList.get(index);
 
 
         //editPetTab labels
@@ -207,10 +221,15 @@ public class MERapp extends JFrame implements Runnable {
                 switch (buttonName) {
                     case "Okay":
                         updatePetList();
-                        closeWindowEvent();
+                        closeEditWindowEvent();
                         break;
                     case "Cancel":
-                        closeWindowEvent();
+                        closeEditWindowEvent();
+                        break;
+                    case "Delete this pet":
+                        removePetFromPetList();
+                        updateMainDash(); //todo check this works
+                        closeEditWindowEvent();
                         break;
                     default:
                         JOptionPane.showMessageDialog(frame, "Unknown event");
@@ -228,11 +247,11 @@ public class MERapp extends JFrame implements Runnable {
         //editPetTab fields
         decimalFormat = new DecimalFormat();
         weightField = new JFormattedTextField(decimalFormat);
-        weightField.setValue(editPet.getWeight());
+        weightField.setValue(currentPet.getWeight());
         nameField = new JTextField();
-        nameField.setText(editPet.getPetName());
+        nameField.setText(currentPet.getPetName());
         dietCalField = new JFormattedTextField(decimalFormat);
-        dietCalField.setValue(editPet.getDietCalPerKg());
+        dietCalField.setValue(currentPet.getDietCalPerKg());
 
         //todo maybe, accessibility tool info
 //        weightLabel.setLabelFor(weightField);
@@ -252,21 +271,35 @@ public class MERapp extends JFrame implements Runnable {
         buttonPane.add(backButton);
         buttonPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
+        //TODO HERE
+        //todo editPetListener for deletePet
+        JPanel infoPane = new JPanel();
+        deletePet = new JButton("Delete this pet");
+        deletePet.addActionListener(editPetListener);
+        infoPane.add(deletePet);
+
         //add panels to tab, labels on left, text fields on right
 //        editPetTab.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 //        editPetTab.setLayout();
-        editPetTab.add(editPane, BorderLayout.NORTH);
+        editPetTab.add(editPane, BorderLayout.CENTER);
+        editPetTab.add(infoPane, BorderLayout.EAST);
         editPetTab.add(buttonPane, BorderLayout.SOUTH);
-
         tabbedPane.addTab("Edit " + name, editPetTab);
         tabbedPane.setSelectedComponent(editPetTab);
     }
+
+    //tododoc
+    private void removePetFromPetList() {
+        currentPet = petList.getPetArray().get(index);
+        petList.remove(currentPet);
+    }
+
     //tododoc
     private void updatePetList() {
         System.out.println("update pet list");
         String newName = nameField.getText();
-        double weightInput = ((Number)weightField.getValue()).doubleValue();
-        double dietCalKg = ((Number)dietCalField.getValue()).doubleValue();
+        double weightInput = ((Number) weightField.getValue()).doubleValue();
+        double dietCalKg = ((Number) dietCalField.getValue()).doubleValue();
 
         currentPet = petArrayList.get(index);
         currentPet.setNewName(newName);
@@ -277,7 +310,7 @@ public class MERapp extends JFrame implements Runnable {
     }
 
     //tododoc
-    private void closeWindowEvent() {
+    private void closeEditWindowEvent() {
         System.out.println("close window");
         tabbedPane.remove(editPetTab);
         editPetTab = null;
@@ -304,15 +337,108 @@ public class MERapp extends JFrame implements Runnable {
     }
 
     //TODO#3 remove pet
-    //TODO#2 add new pet
+    //todo make AddPetTab more robust: allows user to try submitting again
     //TODO HEREHERE
     //tododoc
     private void addNewPetEvent() {
         System.out.println("add pet");
-        JPanel newPetInputPane = new JPanel();
-        newPetInputPane.setLayout(new GridLayout(4, 2));
+        addPetTab = new JPanel();
+
+
+        ActionListener addPetListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String buttonName = e.getActionCommand();
+                switch (buttonName) {
+                    case "Create New Pet":
+                        addNewToPetList();
+                        closeAddPetWindowEvent(); //includes updating main dash
+                        break;
+                    case "Cancel":
+                        closeAddPetWindowEvent();
+                        break;
+                    default:
+                        JOptionPane.showMessageDialog(frame, "Unknown event");
+                }
+            }
+
+            private void closeAddPetWindowEvent() {
+                System.out.println("close window");
+                tabbedPane.remove(addPetTab);
+                addPetTab = null;
+                updateMainDash();
+            }
+        };
+
+        weightLabel = new JLabel("Weight (kg) * (required)");
+        weightField = new JFormattedTextField(decimalFormat);
+        nameLabel = new JLabel("Pet Name * (required)");
+        nameField = new JTextField();
+        dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
+        dietCalField = new JFormattedTextField(decimalFormat);
+
+
+        //todo finish addPet to PetList
+        //todo forbid >1 tab
+        //todo check that name and weight are both filled
+        newPetInputPane = new JPanel();
+        newPetInputPane.setLayout(new GridLayout(3, 2));
+        newPetInputPane.add(nameLabel);
+        newPetInputPane.add(nameField);
+        newPetInputPane.add(weightLabel);
+        newPetInputPane.add(weightField);
+        newPetInputPane.add(dietCalLabel);
+        newPetInputPane.add(dietCalField);
+
+        JButton addPetButton = new JButton("Create New Pet");
+        JButton backButton = new JButton("Cancel");
+        addPetButton.addActionListener(addPetListener);
+        backButton.addActionListener(addPetListener);
+        JPanel buttonPane = new JPanel(new GridLayout(1, 2));
+        buttonPane.add(addPetButton);
+        buttonPane.add(backButton);
+        buttonPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        addPetTab.add(new JLabel("Please enter your pet's information below", SwingConstants.CENTER));
+        addPetTab.add(newPetInputPane, BorderLayout.CENTER);
+        addPetTab.add(buttonPane, BorderLayout.SOUTH);
+
+        tabbedPane.addTab("Create New Pet", addPetTab);
+        tabbedPane.setSelectedComponent(addPetTab);
+
+
+//        newPetInputPane.setLayout(new GridLayout(4, 2));
+
     }
 
+    //TODO I'M HERE
+    private void addNewToPetList() {
+        System.out.println("adding new pet to pet list");
+        //get name and weight for instantiating new pet
+        try {
+            String nameInput = nameField.getText();
+            double weightInput = ((Number) weightField.getValue()).doubleValue();
+            Pet newPet = new Pet(nameInput, weightInput);
+            currentPet = newPet;
+        } catch (NullPointerException e) {
+            System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(frame, "Entries don't meet requirements.");
+        }
+
+        try {
+            double dietCalInput = ((Number) dietCalField.getValue()).doubleValue();
+            currentPet.setNewDiet(dietCalInput);
+        } catch (NullPointerException e) {
+        } finally {
+            petList.add(currentPet);
+            System.out.println("added new Pet");
+        }
+
+    }
+
+    /*REQUIRES: no currently loaded profile (empty petList)
+    MODIFIES: this
+    EFFECTS: loads previously saved profiles from local json storage path*/
 
     //tododoc
     //todo later add owner name
@@ -330,10 +456,6 @@ public class MERapp extends JFrame implements Runnable {
         frame.setSize(FRAMEWIDTH, FRAMEHEIGHT);
         frame.setVisible(true);
     }
-
-    /*REQUIRES: no currently loaded profile (empty petList)
-    MODIFIES: this
-    EFFECTS: loads previously saved profiles from local json storage path*/
 
     //tododoc
     private void loadSavedPetList() {
@@ -389,29 +511,25 @@ public class MERapp extends JFrame implements Runnable {
     private void updateRightPane() {
         JPanel displayPane = new JPanel();
         displayPane.setLayout(new BoxLayout(displayPane, BoxLayout.Y_AXIS));
-        Pet selectedPet = petArrayList.get(index);
-        String petName = selectedPet.getPetName();
-        double weight = selectedPet.getWeight();
-        double dietCalPerKg = selectedPet.getDietCalPerKg();
-        if (selectedPet.getPortraitPic() == "") {
-            ImageIcon imgIcon = generateDefaultPicLabel();
-            JLabel portraitPic = new JLabel(imgIcon, SwingConstants.CENTER);
-            displayPane.add(portraitPic);
-        } //no else bc currently no functionality to add custom pic
-        displayPane.add(new JLabel("Selected Pet: " + petName));
-        displayPane.add(new JLabel("Weight (kg): " + weight));
-        displayPane.add(new JLabel("Current diet calories (KCal/kg): " + dietCalPerKg));
-        managePetSplitPanes.setRightComponent(displayPane);
-    }
-
-    //tododoc
-    //EFFECTS: converts a Pet ArrayList to a ListModel of pet names
-    private static ListModel<String> castNameToListModel(ArrayList<Pet> petArrayList) {
-        DefaultListModel<String> petListModel = new DefaultListModel<>();
-        for (Pet pet : petArrayList) {
-            petListModel.addElement(pet.getPetName());
+        try {
+            currentPet = petArrayList.get(index);
+            if (currentPet.getPortraitPic() == "") {
+                ImageIcon imgIcon = generateDefaultPicLabel();
+                JLabel portraitPic = new JLabel(imgIcon, SwingConstants.CENTER);
+                displayPane.add(portraitPic);
+            } //no else bc currently no functionality to add custom pic
+            displayPane.add(new JLabel("Selected Pet: " + currentPet.getPetName()));
+            displayPane.add(new JLabel("Weight (kg): " + currentPet.getWeight()));
+            displayPane.add(new JLabel("Current diet calories (KCal/kg): " + currentPet.getDietCalPerKg()));
+            managePetSplitPanes.setRightComponent(displayPane);
+        } catch (IndexOutOfBoundsException e) {
+            //change the right pane to default
+            //todo later abstract
+            displayPane.add(new JLabel("No pets in profile"));
+            managePetSplitPanes.setRightComponent(displayPane);
         }
-        return petListModel;
+
+
     }
 
     //TODO#4 create new profile
@@ -441,6 +559,7 @@ public class MERapp extends JFrame implements Runnable {
         JButton editPetButton = new JButton("Edit a Pet");
         JButton savePetButton = new JButton("Save Session");
         ListModel<String> petListModel;
+
         //tododoc
         public MainMenuTab(ArrayList<Pet> petArrayList, ActionListener actionListener,
                            ListSelectionListener listSelectionListener, JSplitPane splitPane1) {
@@ -459,11 +578,13 @@ public class MERapp extends JFrame implements Runnable {
             this.addWithConstraints(savePetButton, 1, 2, 2);
             this.addWithConstraints(Tabs.closeButton(actionListener), 3, 0, 3);
         }
+
         //EFFECTS: returns a JLabel of the main menu's header (the app title)
         private static JLabel mainMenuHeader() {
             JLabel label = new JLabel("Pet Weight Management App Dashboard", SwingConstants.CENTER);
             return label;
         }
+
         //tododoc
         private void addWithConstraints(JComponent component, int gbcWidth, int gbcX, int gbcY) {
             gbc.gridwidth = gbcWidth;
@@ -471,6 +592,7 @@ public class MERapp extends JFrame implements Runnable {
             gbc.gridy = gbcY;
             this.add(component, gbc);
         }
+
         //EFFECTS: add actionListeners for the following buttons
         private void addActionListeners() {
             newPetButton.addActionListener(actionListener);

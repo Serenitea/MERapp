@@ -25,18 +25,6 @@ public class Tabs extends JComponent {
         return tab;
     }
 
-    /*static class IntroTab extends Tabs {
-        public IntroTab(ActionListener actionListener) {
-            JPanel introMenuPanel = new Panels.IntroMenuPanel(actionListener);
-            super.add(introMenuPanel);
-        }
-    }*/
-
-    //tododoc
-    public static JPanel editPetTab(ActionListener actionListener) {
-        JPanel tab = new JPanel();
-        return tab;
-    }
 
     //tododoc
     public static JButton closeButton(ActionListener actionListener) {
