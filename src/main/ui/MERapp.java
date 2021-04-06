@@ -59,7 +59,7 @@ public class MERapp extends JFrame implements Runnable {
     private JFormattedTextField weightField;
     private JPanel labelPane;
     private JPanel fieldPane;
-    private JSplitPane editPane;
+    private JPanel editPane;
     private JTextField nameField;
     private JFormattedTextField dietCalField;
     private JLabel nameLabel;
@@ -237,30 +237,20 @@ public class MERapp extends JFrame implements Runnable {
         //todo maybe, accessibility tool info
 //        weightLabel.setLabelFor(weightField);
 
-        //labels panel
-        labelPane = new JPanel();
-        labelPane.setLayout(new BoxLayout(labelPane, BoxLayout.Y_AXIS));
-        labelPane.add(weightLabel);
-        labelPane.add(nameLabel);
-        labelPane.add(dietCalLabel);
-
-        //text fields panel
-        fieldPane = new JPanel();
-        fieldPane.setLayout(new BoxLayout(fieldPane, BoxLayout.Y_AXIS));
-        fieldPane.add(weightField);
-        fieldPane.add(nameField);
-        fieldPane.add(dietCalField);
-
-        editPane = new JSplitPane();
-//        editPane.setLayout(new BoxLayout(editPane, BoxLayout.Y_AXIS));
-        editPane.setLeftComponent(labelPane);
-        editPane.setRightComponent(fieldPane);
-
+        editPane = new JPanel();
+        editPane.setLayout(new GridLayout(3, 2));
+        editPane.add(nameLabel);
+        editPane.add(nameField);
+        editPane.add(weightLabel);
+        editPane.add(weightField);
+        editPane.add(dietCalLabel);
+        editPane.add(dietCalField);
 
         //buttons panel, save or back
         JPanel buttonPane = new JPanel(new GridLayout(1, 2));
         buttonPane.add(savePetButton);
         buttonPane.add(backButton);
+        buttonPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         //add panels to tab, labels on left, text fields on right
 //        editPetTab.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -315,9 +305,12 @@ public class MERapp extends JFrame implements Runnable {
 
     //TODO#3 remove pet
     //TODO#2 add new pet
+    //TODO HEREHERE
     //tododoc
     private void addNewPetEvent() {
         System.out.println("add pet");
+        JPanel newPetInputPane = new JPanel();
+        newPetInputPane.setLayout(new GridLayout(4, 2));
     }
 
 
