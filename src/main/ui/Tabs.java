@@ -38,12 +38,14 @@ public class Tabs extends JComponent {
         button.addActionListener(actionListener);
         return button;
     }
-    //tododoc
+
+    //EFFECTS: creates a JLabel to serve as a header for the intro UI
     public static JLabel header() {
         JLabel label = new JLabel("Pet Weight Management App", SwingConstants.CENTER);
         //todo format the header
         return label;
     }
+
     //tododoc
     public static class NewProfilePanel extends JPanel {
         private JTextField userNameField = new JTextField();
