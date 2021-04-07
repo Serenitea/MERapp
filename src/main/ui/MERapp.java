@@ -2,6 +2,7 @@ package ui;
 
 import model.Pet;
 import model.PetList;
+import org.json.JSONException;
 import persistence.JsonReader;
 import persistence.JsonWriter;
 
@@ -15,8 +16,6 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import static java.awt.GridBagConstraints.BOTH;
 
@@ -25,20 +24,18 @@ import static java.awt.GridBagConstraints.BOTH;
 //
 //
 // user interface methods
+//TODO found bug when there's no saved profile and then clicking "load saved profile"
 public class MERapp extends JFrame implements Runnable {
     public static final int FRAME_WIDTH = 450;
     public static final int FRAME_HEIGHT = 400;
     public static final int MIN_WIDTH = 450;
     public static final int MIN_HEIGHT = 400;
-    private static final String JSON_STORE = "./data/profiles.json";
-
+    //    private static final String JSON_STORE = "./data/profiles.json";
+    private static final String JSON_STORE = "./data/test.json";
     private static final String DEFAULT_PET_PORTRAIT_URL = "./data/dog.png";
     private static final String FRAME_ICON_URL = "./data/paw.png";
     private static final Dimension PORTRAIT_PIC_SIZE = new Dimension(75, 75);
-    private static List<String> MANAGE_PET_MENU_HEADER = Arrays.asList(
-            "\n------------------------------------",
-            "Manage a Pet - Menu",
-            "\n------------------------------------");
+
     JFrame frame;
     JPanel introPanel = new JPanel();
     ActionListener mainMenuListener;
@@ -117,6 +114,14 @@ public class MERapp extends JFrame implements Runnable {
     }
 
     //tododoc
+    private void initializeFields() {
+        petList = new PetList();
+        petArrayList = new ArrayList<>();
+        jsonReader = new JsonReader(JSON_STORE);
+        jsonWriter = new JsonWriter(JSON_STORE);
+    }
+
+    //tododoc
     private void initializeFrame() {
         frame = new JFrame("Pet Weight Management App GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -129,6 +134,9 @@ public class MERapp extends JFrame implements Runnable {
         frame.setVisible(true);
     }
 
+    //TODO prompt to save current Pet to json file when exiting profile
+    // or close app from dash
+    //TODO  Warns user if they attempt to create a pet with a duplicate name (not case-sensitive)
     //tododoc
     private void initIntroListener() {
         introListener = e -> {
@@ -145,8 +153,7 @@ public class MERapp extends JFrame implements Runnable {
                     loadNewProfile();
                     break;
                 case "Cancel":
-                    introPanel.removeAll();
-                    introPanel.add(new Tabs.IntroMenuPanel(introListener));
+                    setJPanel(introPanel, new Tabs.IntroMenuPanel(introListener));
                     frame.setContentPane(introPanel);
                     frame.setVisible(true);
                     break;
@@ -166,6 +173,7 @@ public class MERapp extends JFrame implements Runnable {
 
     private void launchMainMenu() {
         initMainListener();
+        initlistSelectionListener();
         tabbedPane = initializeTabs();
 //        frame.getContentPane().add(tabbedPane);
         frame.setContentPane(tabbedPane);
@@ -183,26 +191,13 @@ public class MERapp extends JFrame implements Runnable {
                 case "Add New Pet":
                     addNewPetEvent();
                     break;
-                case "Edit a Pet":
-                    if (editPetTab == null) {
-                        //tabbedPane.indexOfTabComponent(editPetTab) == -1
-                        editPetEvent();
-                        break;
-                    } else {
-                        JOptionPane.showMessageDialog(frame, "You can only edit one pet at a time");
-                        break;
-                    }
-                case "Save Session":
-                    updatePetList();
+                case "Edit a Pet": //TODO empty petlist case
+                    editPetEvent();
+                case "Save Session": //todo later - modify empty petlist case - should still save?
                     saveSessionEvent();
                     break;
                 case "Exit Profile": //todo later implement more secure methods
-                    petList = new PetList();
-                    petArrayList = new ArrayList<>();
-                    introPanel.removeAll();
-                    introPanel.add(new Tabs.IntroMenuPanel(introListener));
-                    frame.setContentPane(introPanel);
-                    System.out.println("exited profile");
+                    exitProfileEvent();
                     break;
                 default:
                     System.out.println(editPetTab);
@@ -210,18 +205,61 @@ public class MERapp extends JFrame implements Runnable {
                     break;
             }
         };
-        //TODO custom app icon
+    }
+
+    private void saveSessionEvent() {
+        try {
+            updatePetList();
+            saveSession();
+        } catch (NullPointerException e) {
+            System.out.println("no pets in profiles");
+        }
+    }
+
+    //todo later warning if weight is over 80?kg
+    //TODO fix IndexOutOfBoundException when deleting pet
+    //tododoc
+    //todo later add exception detail of trying to edit a pet that's already being edited
+    private void editPetEvent() { //TODO was here
+        try {
+            if (editPetTab == null) {
+                //other option: tabbedPane.indexOfTabComponent(editPetTab) == -1
+                editSelectedPet();
+            } else {
+                JOptionPane.showMessageDialog(frame, "You can only edit one pet at a time");
+            }
+        } catch (NullPointerException e) {
+            JOptionPane.showMessageDialog(frame, "No pets in profile currently. "
+                    + "Select \"Add New Pet\" to add a pet to this profile.");
+        }
+
+    }
+    //todo later can't save if both profile name and pet list are empty
+    //TODO save not working??? when saving from null
+    private void exitProfileEvent() {
+        frame.setVisible(false);
+        frame = null;
+        introPanel = new JPanel();
+//        introPanel.add(new Tabs.IntroMenuPanel(introListener));
+//        frame.setContentPane(introPanel);
+        System.out.println("exited profile");
+        initializeFields();
+        initializeFrame();
+        System.out.println(tabbedPane);
+    }
+
+    private void initlistSelectionListener() {
         //tododoc
         listSelectionListener = e -> {
             JList<String> curPetJList = (JList) e.getSource();
             index = curPetJList.getSelectedIndex();
             updateRightPane();
         };
-
     }
 
+
     //tododoc
-    private void saveSessionEvent() {
+    private void saveSession() {
         System.out.println("save session");
         //todo later ask for Owner name when saving
         try {
@@ -237,12 +275,14 @@ public class MERapp extends JFrame implements Runnable {
 
     //todo later formatting polish
     //todo later move edit pet button to pet display
+    //todo if blank profile name should say "no profile name set"
+    //TODO if clicking edit a pet when there's no pets -> dialog "no pets"
     //fields - name/string, weight/double, diet/double
     //catch incorrect entries
     //done button
     //save button
-    //close edit window
-    private void editPetEvent() {
+    //close edit window    //TODO SHORTEN
+    private void editSelectedPet() {
         try {
             String name = petArrayList.get(index).getPetName();
             System.out.println("edit pet" + index);
@@ -253,28 +293,7 @@ public class MERapp extends JFrame implements Runnable {
             weightLabel = new JLabel("Weight (kg)");
             nameLabel = new JLabel("Pet Name");
             dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
-            ActionListener editPetListener = new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    String buttonName = e.getActionCommand();
-                    switch (buttonName) {
-                        case "Okay":
-                            updatePetList();
-                            closeEditWindowEvent();
-                            break;
-                        case "Cancel":
-                            closeEditWindowEvent();
-                            break;
-                        case "Delete this pet":
-                            removePetFromPetList();
-                            updateMainDash(); //todo check this works
-                            closeEditWindowEvent();
-                            break;
-                        default:
-                            JOptionPane.showMessageDialog(frame, "Unknown event");
-                    }
-                }
-            };
+            ActionListener editPetListener = editPetListener();
 
 
             //editPetTab buttons
@@ -324,9 +343,37 @@ public class MERapp extends JFrame implements Runnable {
             tabbedPane.addTab("Edit " + name, editPetTab);
             tabbedPane.setSelectedComponent(editPetTab);
         } catch (IndexOutOfBoundsException e) {
-            JOptionPane.showMessageDialog(frame, "No pet selected.");
+            JOptionPane.showMessageDialog(frame, "No pet selected."); //TODO change this so it's not covering  empty case
         }
 
+    }
+
+    //todo later if no diet calories entered, display that instead of 0
+
+
+    private ActionListener editPetListener() {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String buttonName = e.getActionCommand();
+                switch (buttonName) {
+                    case "Okay":
+                        updatePetList();
+                        closeEditWindowEvent();
+                        break;
+                    case "Cancel":
+                        closeEditWindowEvent();
+                        break;
+                    case "Delete this pet":
+                        removePetFromPetList();
+                        updateMainDash(); //todo check this works
+                        closeEditWindowEvent();
+                        break;
+                    default:
+                        JOptionPane.showMessageDialog(frame, "Unknown event");
+                }
+            }
+        };
     }
 
     //tododoc
@@ -377,6 +424,7 @@ public class MERapp extends JFrame implements Runnable {
         leftPane = new JScrollPane(petJList);
         managePetSplitPanes.setLeftComponent(leftPane);
     }
+    //TODO SHORTEN
 
     //todo make AddPetTab more robust: allows user to try submitting again
     //tododoc
@@ -399,7 +447,7 @@ public class MERapp extends JFrame implements Runnable {
                         } else {
                             System.out.println("creating a pet was unsuccessful");
                         }
-                            break;
+                        break;
                     case "Cancel":
                         closeAddPetWindowEvent();
                         break;
@@ -456,6 +504,7 @@ public class MERapp extends JFrame implements Runnable {
 
     }
 
+    //tododoc
     private void addNewToPetList() {
         System.out.println("adding new pet to pet list");
         //get name and weight for instantiating new pet
@@ -469,6 +518,7 @@ public class MERapp extends JFrame implements Runnable {
                 double dietCalInput = ((Number) dietCalField.getValue()).doubleValue();
                 currentPet.setNewDiet(dietCalInput);
             } catch (NullPointerException e) {
+                System.out.println("no diet was inputted");
             } finally {
                 petList.add(currentPet);
                 System.out.println("added new Pet");
@@ -482,19 +532,21 @@ public class MERapp extends JFrame implements Runnable {
     /*REQUIRES: no currently loaded profile (empty petList)
     MODIFIES: this
     EFFECTS: loads previously saved profiles from local json storage path*/
-
-    //tododoc
-    //TODO#1 NOW add option to edit owner name
+    //todo later add option to edit owner name
+    //TODO I was here
     public void loadSavedProfile() {
         try {
             petList = jsonReader.read();
             petArrayList = petList.getPetArray();
             System.out.println("Loaded " + petList.getOwnerName() + " from " + JSON_STORE);
+            launchMainMenu();
         } catch (IOException e) {
             System.out.println("Unable to read from file: " + JSON_STORE);
+        } catch (JSONException e) {
+            System.out.println("No saved profile found at " + JSON_STORE);
+            JOptionPane.showMessageDialog(frame, "No saved profile found at" + JSON_STORE);
         }
-//        frame.remove(introPanel);
-        launchMainMenu();
+
     }
 
     //tododoc
@@ -572,18 +624,12 @@ public class MERapp extends JFrame implements Runnable {
 
     }
 
-    public void setJPanel(JPanel jPanel, Component component) {
-        jPanel.removeAll();
-        jPanel.add(component);
+    public void setJPanel(JPanel panel, Component component) {
+        panel.removeAll();
+        panel.add(component);
     }
 
-    //tododoc
-    private void initializeFields() {
-        petList = new PetList();
-        petArrayList = new ArrayList<>();
-        jsonReader = new JsonReader(JSON_STORE);
-        jsonWriter = new JsonWriter(JSON_STORE);
-    }
+
 
     //tododoc
     //todo later change "close app" button to "close profile"

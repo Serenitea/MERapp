@@ -7,6 +7,7 @@ import model.PetList;*/
 import model.Pet;
 import model.PetList;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class JsonReader {
     }
 
     // EFFECTS: parses PetList from JSON object and returns it
-    private PetList parsePetList(JSONObject jsonObject) {
+    private PetList parsePetList(JSONObject jsonObject) throws JSONException {
         PetList petList = new PetList();
         String name = jsonObject.getString("ownername");
         petList.setOwnerName(name);

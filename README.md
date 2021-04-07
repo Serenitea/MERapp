@@ -10,19 +10,17 @@ and track their pet's weight progression over time. The obesity epidemic, affect
  is a major health concern in small animal medicine. This application can empower pet owners to understand their pet's
  nutritional needs and maintain healthy weights.
  
- ##1. User Stories for phase 1
- - add a new pet with basic traits: name and weight. Duplicate names are not allowed (not case-sensitive).
- - view the current list of pets.
+ User Stories
+ Some user stories were modified upon GUI implementation to better suit user needs.
+ - upon application launch, option to load a saved profile from a json file or to create a new profile. O
+ - user may add new pets to their profile by inputting name and weight. The other pet traits are optional for creating a pet. Optional traits fully implemented currently: diet calories.
+ - Warns user if they attempt to create a pet with a duplicate name (not case-sensitive). This change better suits the needs of the user while retaining duplication detection function. *Previous story: duplicate names were not allowed and the console prompted the user to try inputting again.*
+ - View the current list of pets. One pet may be selected providing an individual display.
  - Select and edit a pet's traits.
- - Remove a pet from the list of current pets.
-  
+ - Remove a pet from the list of current pets. This option is only available from the individual pet edit tab after selecting a pet for editing.
+ - Dialog prompt to save the current session when user submits the "close app" or "exit profile" buttons. This better reflects the capabilities of the GUI since the previous function is now unnecessary. *Previous story: prompt to save current Pet to json file when exiting from individual Pet menu back to Main Menu*
 
- ##2. User Stories for persistence
- - prompt to save current Pet to json file when exiting from individual Pet menu back to Main Menu
- - upon application launch, option to load all pets from json file or start new account
- - prompt to save data upon exiting from a loaded profile before heading back to intro menu.
  
- ##3. User Stories for GUI:
  
  
  ## Resources used
