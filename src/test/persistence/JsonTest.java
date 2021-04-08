@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JsonTest {
     private static final String JSON_STORE = "./test.json";
-    private PetList testPetList = new PetList();
+    private final PetList testPetList = new PetList();
     private JsonReader jsonReader;
 
     public void checkPet(String petName, double weightInKg, double mer, double dietCalPerKg, Pet pet) {

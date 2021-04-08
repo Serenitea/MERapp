@@ -10,7 +10,7 @@ import java.util.ArrayList;
 Represents a user profile with a number of pets
  */
 public class PetList implements Writable {
-    private ArrayList<Pet> myPets;
+    private final ArrayList<Pet> myPets;
     private String ownerName;
 
 

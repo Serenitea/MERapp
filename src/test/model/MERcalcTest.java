@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class MERcalcTest {
     private double testWeight;
     private double nullWeight;
-    private static double TEMP_FACTOR = 1.6;
-    private static double TEST_FACTOR = 1.7;
-    private MERcalc testMERcalc = new MERcalc();
+    private static final double TEMP_FACTOR = 1.6;
+    private static final double TEST_FACTOR = 1.7;
+    private final MERcalc testMERcalc = new MERcalc();
 
     @BeforeEach
     void setUp() {

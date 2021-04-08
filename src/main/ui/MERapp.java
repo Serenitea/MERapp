@@ -52,10 +52,6 @@ public class MERapp extends JFrame implements Runnable {
     private JList<String> petJList; //for listSelectionListener
     private PetList petList;
 
-    public ArrayList<Pet> getPetArrayList() {
-        return petArrayList;
-    }
-
     private ArrayList<Pet> petArrayList;
     private Pet currentPet;
 
@@ -160,7 +156,9 @@ public class MERapp extends JFrame implements Runnable {
 
     private void initIntroUI() {
         initIntroListener();
-        introPaneUI.add(new Tab.IntroMenuPane(introPaneUIListener));
+        Tab.IntroMenuPane introPane = new Tab.IntroMenuPane();
+        introPane.setActionListener(introPaneUIListener);
+        introPaneUI.add(introPane);
         frame.getContentPane().add(introPaneUI);
         frame.setVisible(true);
     }
@@ -202,7 +200,9 @@ public class MERapp extends JFrame implements Runnable {
     EFFECTS: return to intro menu without creating new profile.
      */
     private void cancelCreateNewProfileEvent() {
-        setJPanel(introPaneUI, new Tab.IntroMenuPane(introPaneUIListener));
+        Tab.IntroMenuPane introPane = new Tab.IntroMenuPane();
+        introPane.setActionListener(introPaneUIListener);
+        setJPanel(introPaneUI, introPane);
         frame.setContentPane(introPaneUI);
         frame.setVisible(true);
     }
@@ -417,9 +417,9 @@ public class MERapp extends JFrame implements Runnable {
      */
     private JTabbedPane initMainTab() {
         initSplitPane(petArrayList);
-        Tab.MainTab mainTab = new Tab.MainTab(petList,
-                mainTabListener,
-                mainTabSplitPane);
+        Tab.MainTab mainTab = new Tab.MainTab(petList, mainTabSplitPane);
+        mainTab.setActionListener(mainTabListener);
+        mainTab.getPane();
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("Main Dashboard", mainTab);
         return tabs;
@@ -450,7 +450,8 @@ public class MERapp extends JFrame implements Runnable {
     public void createNewProfileTabEvent() {
         out.println("Create new profile"); //print
 //        petList = new PetList();
-        createNewProfilePane = new Tab.NewProfilePanel(introPaneUIListener);
+        createNewProfilePane = new Tab.NewProfilePanel();
+        createNewProfilePane.setActionListener(introPaneUIListener);
         setJPanel(introPaneUI, createNewProfilePane);
         frame.setContentPane(introPaneUI);
         frame.setVisible(true);
@@ -491,7 +492,8 @@ public class MERapp extends JFrame implements Runnable {
             JOptionPane.showMessageDialog(frame, "You can only add one pet at a time");
         } else {
             out.println("add pet"); //print
-            addPetTab = new Tab.AddNewPetTab(addPetTabListener());
+            addPetTab = new Tab.AddNewPetTab();
+            addPetTab.setActionListener(addPetTabListener());
             tabbedPaneUI.addTab("Create New Pet", addPetTab);
             tabbedPaneUI.setSelectedComponent(addPetTab);
         }
@@ -521,7 +523,7 @@ public class MERapp extends JFrame implements Runnable {
      */
     private void submitAddNewPetTab() {
         out.println("adding new pet to pet list"); //print
-        currentPet = addPetTab.getNewPet();
+        currentPet = addPetTab.getInputtedPet();
         out.println(currentPet); //print
         if (currentPet == null) {
             JOptionPane.showMessageDialog(frame, "Failed to"
@@ -615,7 +617,8 @@ public class MERapp extends JFrame implements Runnable {
     private void editSelectedPet() {
         currentPet = petArrayList.get(index);
         ActionListener editPetListener = editPetTabListener();
-        editPetTab = new Tab.EditPetTab(index, currentPet, editPetListener);
+        editPetTab = new Tab.EditPetTab(index, currentPet);
+        editPetTab.setActionListener(editPetListener);
         tabbedPaneUI.addTab("Edit " + currentPet.getPetName(), editPetTab);
         tabbedPaneUI.setSelectedComponent(editPetTab);
     }
@@ -725,7 +728,7 @@ public class MERapp extends JFrame implements Runnable {
     EFFECTS: updates the edited pet and opened profile with user input.
      */
     private void submitChangesEditPet() {
-        currentPet = editPetTab.getEditedPet();
+        currentPet = editPetTab.getInputtedPet();
         index = editPetTab.getIndex();
         petList.getPetArray().set(index, currentPet);
         out.println("update pet list"); //print

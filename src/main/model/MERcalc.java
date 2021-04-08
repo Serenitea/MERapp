@@ -5,7 +5,7 @@ package model;
 //Class representing a MER calculation for determining nutritional requirements of a pet.
 public class MERcalc {
     private double factor;
-    private static double TEMP_FACTOR = 1.6;
+    private static final double TEMP_FACTOR = 1.6;
 
     public MERcalc() {
         this.factor = TEMP_FACTOR;

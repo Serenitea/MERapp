@@ -14,13 +14,14 @@ import java.util.Objects;
 import static java.awt.GridBagConstraints.BOTH;
 import static java.lang.System.out;
 
-public class Tab {
-    /*
-        REQUIRES: index refers to a valid Pet object in PetArrayList
-        MODIFIES: this.EditPetTab
-        EFFECTS: creates EditPetTab's form.
-         */
-    static class EditPetTab extends JPanel {
+//UI panels for each JFrame window visible interface
+public abstract class Tab extends JPanel {
+
+    //sets ActionListener argument to appropriate components of a Tab subclass
+    public abstract void setActionListener(ActionListener actionListener);
+
+    //tab that allows user to edit Pet details and delete a Pet
+    static class EditPetTab extends Tab implements PetInputForm {
         int index;
         Pet currentPet;
         JButton savePetButton;
@@ -28,26 +29,22 @@ public class Tab {
         ActionListener editPetListener;
         JPanel buttonPane;
         JPanel deletePetPane;
-        private NumberFormat decimalFormat = new DecimalFormat();
         private JPanel editPane;
-        private JLabel weightLabel;
         private JFormattedTextField weightField;
         private JTextField nameField;
         private JFormattedTextField dietCalField;
-        private JLabel nameLabel;
-        private JLabel dietCalLabel;
         private double weightInput;
         private String nameInput;
         private double dietCalInput;
+        private JButton deletePetButton;
 
         //constructor
-        public EditPetTab(int index, Pet pet, ActionListener editPetListener) {
+        public EditPetTab(int index, Pet pet) {
             this.currentPet = pet;
             this.index = index;
-            this.editPetListener = editPetListener;
 
             this.buttonPane = setEditPetTabButtonPane();
-            this.editPane = setEditPetTabEditPane();
+            this.editPane = setInputFormPane();
             this.deletePetPane = setDeletePetPane();
 
             //add panels to tab, labels on left, text fields on right
@@ -56,13 +53,20 @@ public class Tab {
             this.add(buttonPane, BorderLayout.SOUTH);
         }
 
+        @Override
+        public void setActionListener(ActionListener actionListener) {
+            this.editPetListener = actionListener;
+            this.savePetButton.addActionListener(editPetListener);
+            this.backButton.addActionListener(editPetListener);
+            deletePetButton.addActionListener(editPetListener);
+        }
+
         //REQUIRES: actionListener with associated actions for the removePet JButton
         //MODIFIES: this
         //EFFECTS: Creates DeletePet button panel - houses DeletePet button + other info in future
         private JPanel setDeletePetPane() {
             JPanel infoPane = new JPanel();
-            JButton deletePetButton = new JButton("Delete this pet");
-            deletePetButton.addActionListener(editPetListener);
+            deletePetButton = new JButton("Delete this pet");
             infoPane.add(deletePetButton);
             return infoPane;
         }
@@ -76,8 +80,8 @@ public class Tab {
         private JPanel setEditPetTabButtonPane() {
             this.savePetButton = new JButton("Okay");
             this.backButton = new JButton("Cancel");
-            this.savePetButton.addActionListener(editPetListener);
-            this.backButton.addActionListener(editPetListener);
+//            this.savePetButton.addActionListener(editPetListener);
+//            this.backButton.addActionListener(editPetListener);
             //buttons panel, save or back
             JPanel buttonPane = new JPanel(new GridLayout(1, 2));
             buttonPane.add(savePetButton);
@@ -91,13 +95,13 @@ public class Tab {
         EFFECTS: Construct JPanel input form with Text label and editable text field
                  for each pet trait.
          */
-        private JPanel setEditPetTabEditPane() {
-            this.weightLabel = new JLabel("Weight (kg)");
-            this.nameLabel = new JLabel("Pet Name");
-            this.dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
+        public JPanel setInputFormPane() {
+            JLabel weightLabel = new JLabel("Weight (kg)");
+            JLabel nameLabel = new JLabel("Pet Name");
+            JLabel dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
 
             //editPane fields
-            decimalFormat = new DecimalFormat();
+            NumberFormat decimalFormat = new DecimalFormat();
             weightField = new JFormattedTextField(decimalFormat);
             weightField.setValue(currentPet.getWeight());
             nameField = new JTextField();
@@ -122,7 +126,7 @@ public class Tab {
         }
 
         //checks if weightField returns a positive double type number
-        private boolean validWeightInput() {
+        public boolean validWeightInput() {
             try {
                 this.weightInput = ((Number) weightField.getValue()).doubleValue();
                 if (weightInput > 0) {
@@ -135,7 +139,7 @@ public class Tab {
         }
 
         //checks if nameField returns a valid name String
-        private boolean validNameInput() {
+        @Override public boolean validNameInput() {
             try {
                 nameInput = nameField.getText();
                 return true;
@@ -145,7 +149,7 @@ public class Tab {
         }
 
         //checks if dietCalField returns a positive double type number
-        private boolean validDietCalInput() {
+        @Override public boolean validDietCalInput() {
             try {
                 dietCalInput = ((Number) dietCalField.getValue()).doubleValue();
                 if (weightInput > 0) {
@@ -158,21 +162,19 @@ public class Tab {
         }
 
         /*
-        MODIFIES: this
+        MODIFIES: thissupertype
         EFFECTS: returns a Pet object if all inputs are valid.
          */
-        public Pet getEditedPet() {
+        @Override public Pet getInputtedPet() {
             if (validNameInput() && validWeightInput() && validDietCalInput()) {
                 Pet editedPet = new Pet(nameInput, weightInput);
                 editedPet.setNewDiet(dietCalInput);
-    //                if (validDietCalInput()) {
-    //                    newPet.setNewDiet(dietCalInput);
-    //                }
                 return editedPet;
             } else {
                 return null;
             }
         }
+
 
     }
 
@@ -181,7 +183,7 @@ public class Tab {
     //SplitPane: in L pane, User may select any pet in the profile from a list of pets.
     //           the R pane will dynamically update with each selection to display individual pet details
     //           default portrait pic is loaded with each Pet display - currently no method to change pet portraits
-    public static class MainTab extends JPanel {
+    public static class MainTab extends Tab {
         PetList petList;
         ArrayList<Pet> petArrayList;
         JSplitPane splitPanePetsPanel;
@@ -196,21 +198,28 @@ public class Tab {
 
         /*
         REQUIRES: petArrayList cannot be null
-        MODIFIES:
-        EFFECTS:
+        EFFECTS: instantiates mainTab with a GridBagLayout of 4 rows and 3 columns
          */
-        //instantiates mainTab with a GridBagLayout of 4 rows and 3 columns
-        public MainTab(PetList petList, ActionListener actionListener,
-                       JSplitPane splitPane1) {
+        public MainTab(PetList petList, JSplitPane splitPane1) {
             this.splitPanePetsPanel = splitPane1;
             this.petList = petList;
             this.petArrayList = petList.getPetArray();
     //            isPetListEmpty = (petArrayList.size() <= 0);
+        }
+
+        @Override
+        public void setActionListener(ActionListener actionListener) {
+            this.actionListener = actionListener;
+            newPetButton.addActionListener(actionListener);
+            editPetButton.addActionListener(actionListener);
+            savePetButton.addActionListener(actionListener);
+        }
+
+        public void getPane() {
             this.setLayout(gridBagLayout);
             gbc = new GridBagConstraints();
             gbc.fill = BOTH;
-            this.actionListener = actionListener;
-            addActionListeners();
+
             this.petListModel = MERapp.toListModel(petArrayList);
             this.addWithConstraints(mainTabHeader(), 3, 0, 0);
             this.addWithConstraints(splitPanePetsPanel, 3, 0, 1);
@@ -226,8 +235,8 @@ public class Tab {
          */
         private JPanel buttonPane(ActionListener actionListener) {
             JPanel pane = new JPanel(new BorderLayout());
-            JButton closeButton = Content.closeAppButton(actionListener);
-            JButton exitProfileButton = Content.exitProfileButton(actionListener);
+            JButton closeButton = ContentComponents.closeAppButton(actionListener);
+            JButton exitProfileButton = ContentComponents.exitProfileButton(actionListener);
 
             pane.add(closeButton, BorderLayout.WEST);
             pane.add(exitProfileButton, BorderLayout.EAST);
@@ -264,67 +273,62 @@ public class Tab {
             this.add(component, gbc);
         }
 
-        //EFFECTS: add actionListeners for the following buttons
-        private void addActionListeners() {
-            newPetButton.addActionListener(actionListener);
-            editPetButton.addActionListener(actionListener);
-            savePetButton.addActionListener(actionListener);
-        }
-
     }
 
     //creates and runs the UI tab for creating adding a new pet
     //user may input and submit pet traits into text fields to create new pet
     //user may also cancel pet creation by the "cancel" JButton
-    public static class AddNewPetTab extends JPanel {
+    public static class AddNewPetTab extends JPanel implements PetInputForm {
         private final NumberFormat decimalFormat = new DecimalFormat();
-        private final JLabel instructionLabel = new JLabel("Please enter your pet's information below",
-                SwingConstants.CENTER);
         ActionListener addPetListener;
         JButton createPetButton;
         JButton backButton;
         JPanel buttonPane;
         private JPanel createNewPetInputPane;
-        //        private NumberFormat decimalFormat = new DecimalFormat("PositivePattern");
-        private JLabel weightLabel;
         private JFormattedTextField weightField;
         private JTextField nameField;
         private JFormattedTextField dietCalField;
-        private JLabel nameLabel;
-        private JLabel dietCalLabel;
         private double weightInput;
         private String nameInput;
         private double dietCalInput;
 
         //inits the UI form for AddNewPetTab
-        public AddNewPetTab(ActionListener addPetTabListener) {
-            this.addPetListener = addPetTabListener;
-            setCreateNewPetInputPane();
+        public AddNewPetTab() {
+
+            setInputFormPane();
             //init buttons
             createPetButton = new JButton("Submit");
             backButton = new JButton("Cancel");
-            createPetButton.addActionListener(addPetListener);
-            backButton.addActionListener(addPetListener);
+
             //init button panel
             buttonPane = new JPanel(new GridLayout(1, 2));
             buttonPane.add(createPetButton);
             buttonPane.add(backButton);
             buttonPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            JLabel instructionLabel = new JLabel("Please enter your pet's information below",
+                    SwingConstants.CENTER);
             this.add(instructionLabel);
             this.add(createNewPetInputPane, BorderLayout.CENTER);
             this.add(buttonPane, BorderLayout.SOUTH);
+        }
+
+        public void setActionListener(ActionListener actionListener) {
+            this.addPetListener = actionListener;
+            createPetButton.addActionListener(addPetListener);
+            backButton.addActionListener(addPetListener);
         }
 
         /*
         MODIFIES: this
         EFFECTS: inits the JPanel displaying user input text fields and their labels
          */
-        private void setCreateNewPetInputPane() {
-            this.weightLabel = new JLabel("Weight (kg) *");
+        @Override public JPanel setInputFormPane() {
+            //        private NumberFormat decimalFormat = new DecimalFormat("PositivePattern");
+            JLabel weightLabel = new JLabel("Weight (kg) *");
             this.weightField = new JFormattedTextField(decimalFormat);
-            this.nameLabel = new JLabel("Pet Name *");
+            JLabel nameLabel = new JLabel("Pet Name *");
             this.nameField = new JTextField();
-            this.dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
+            JLabel dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
             this.dietCalField = new JFormattedTextField(decimalFormat);
 
             //todo forbid >1 tab of AddPetTab
@@ -337,15 +341,15 @@ public class Tab {
             createNewPetInputPane.add(weightField);
             createNewPetInputPane.add(dietCalLabel);
             createNewPetInputPane.add(dietCalField);
+            return createNewPetInputPane;
         }
 
 
         /*
-        REQUIRES: weightInput instantiated
         EFFECTS: returns true if the input is a valid positive number.
         //value of 0 is allowed if the user doesn't know pet weight.
          */
-        private boolean validWeightInput() {
+        @Override public boolean validWeightInput() {
             try {
                 this.weightInput = ((Number) weightField.getValue()).doubleValue();
                 if (weightInput > 0) {
@@ -358,7 +362,7 @@ public class Tab {
         }
 
         //checks if nameField returns a valid name String
-        private boolean validNameInput() {
+        @Override public boolean validNameInput() {
             try {
                 nameInput = nameField.getText();
                 return true;
@@ -368,7 +372,7 @@ public class Tab {
         }
 
         //checks if dietCalField returns a positive double type number
-        private boolean validDietCalInput() {
+        @Override public boolean validDietCalInput() {
             try {
                 dietCalInput = ((Number) dietCalField.getValue()).doubleValue();
                 if (weightInput > 0) {
@@ -384,7 +388,7 @@ public class Tab {
         MODIFIES: this
         EFFECTS: returns a Pet object if both name and weight inputs are valid.
          */
-        public Pet getNewPet() {
+        @Override public Pet getInputtedPet() {
             if (validNameInput() && validWeightInput()) {
                 Pet newPet = new Pet(nameInput, weightInput);
                 if (validDietCalInput()) {
@@ -401,24 +405,22 @@ public class Tab {
     //REQUIRES: actionListener input must have appropriate action commands for the JButtons
     //          newProfileButton and cancelButton
     //EFFECTS: creates the UI that allows users to fill and submit a form to create a new profile.
-    public static class IntroMenuPane extends JPanel {
+    public static class IntroMenuPane extends Tab {
         ActionListener actionListener;
         JButton startCreateNewProfileButton = new JButton("New Profile");
         JButton loadSavedProfileButton = new JButton("Load saved profile");
 
-        //tododoc
-        public IntroMenuPane(ActionListener actionListener) {
+        //constructor
+        public IntroMenuPane() {
             this.setLayout(new GridBagLayout());
             GridBagConstraints gbc = new GridBagConstraints();
             gbc.fill = BOTH;
-            this.actionListener = actionListener;
+
             gbc.ipady = 40;
             gbc.gridwidth = 2;
             gbc.gridy = 0;
-            this.add(Content.header(), gbc);
+            this.add(ContentComponents.header(), gbc);
             /*closeButton.addActionListener(e -> System.exit(0));*/
-            startCreateNewProfileButton.addActionListener(actionListener);
-            loadSavedProfileButton.addActionListener(actionListener);
             gbc.ipady = 0;
             gbc.gridwidth = 1;
             gbc.gridx = 0;
@@ -430,7 +432,14 @@ public class Tab {
             gbc.gridwidth = 2;
             gbc.gridx = 0;
             gbc.gridy = 2;
-            this.add(Content.closeAppButton(actionListener), gbc);
+            this.add(ContentComponents.closeAppButton(actionListener), gbc);
+        }
+
+        @Override
+        public void setActionListener(ActionListener actionListener) {
+            this.actionListener = actionListener;
+            startCreateNewProfileButton.addActionListener(actionListener);
+            loadSavedProfileButton.addActionListener(actionListener);
         }
 
     }
@@ -438,30 +447,25 @@ public class Tab {
     //REQUIRES: actionListener input must have appropriate action commands for the JButtons
     //          submitNewProfileButton and cancelButton
     //EFFECTS: creates the UI that allows users to fill and submit a form to create a new profile.
-    public static class NewProfilePanel extends JPanel {
-        private JTextField userNameField = new JTextField();
-        private final JLabel userNameLabel;
+    public static class NewProfilePanel extends Tab {
+        private final JTextField userNameField = new JTextField();
         ActionListener actionListener;
         JButton submitNewProfileButton = new JButton("Submit");
         JButton cancelNewProfileButton = new JButton("Cancel");
 
         //initializes the JPanel display
-        public NewProfilePanel(ActionListener actionListener) {
+        public NewProfilePanel() {
 
             JPanel textPane = new JPanel();
             JPanel inputPane = new JPanel();
             JPanel buttonPane = new JPanel();
 
-            //TODO PHASE4 add exception to load new profile if there's no saved profile
             textPane.add(new JLabel("Create New Profile"));
-            userNameLabel = new JLabel("User Name");
+            JLabel userNameLabel = new JLabel("User Name");
             inputPane.setLayout(new GridLayout(1, 2));
             inputPane.add(userNameLabel);
             inputPane.add(userNameField);
 
-            this.actionListener = actionListener;
-            submitNewProfileButton.addActionListener(actionListener);
-            cancelNewProfileButton.addActionListener(actionListener);
             buttonPane.add(submitNewProfileButton);
             buttonPane.add(cancelNewProfileButton);
 
@@ -471,6 +475,13 @@ public class Tab {
             entirePane.add(inputPane, BorderLayout.CENTER);
             entirePane.add(buttonPane, BorderLayout.SOUTH);
             this.add(entirePane);
+        }
+
+        @Override
+        public void setActionListener(ActionListener actionListener) {
+            this.actionListener = actionListener;
+            submitNewProfileButton.addActionListener(actionListener);
+            cancelNewProfileButton.addActionListener(actionListener);
         }
 
         //EFFECTS: returns a String of the user's input in the JTextField to be set as profile name.

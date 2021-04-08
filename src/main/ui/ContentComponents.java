@@ -5,11 +5,11 @@ import java.awt.event.ActionListener;
 
 // describes and initializes JTabbedPanes for The UI's main JFrame window
 //minimum size dimensions not currently in use
-public class Content extends JComponent {
+public class ContentComponents extends JComponent {
 //    public static final int WIDTH = 450;
 //    public static final int HEIGHT = 600;
 
-    public Content() {
+    public ContentComponents() {
 //        super.setMinimumSize(new Dimension(WIDTH, HEIGHT));
     }
 
