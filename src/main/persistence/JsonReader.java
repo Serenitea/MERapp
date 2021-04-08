@@ -67,7 +67,8 @@ public class JsonReader {
     private void addPet(PetList petList, JSONObject jsonObject) {
         String name = jsonObject.getString("pet name");
         double weight = jsonObject.getDouble("weight");
-        Pet pet = new Pet(name, weight);
+        double dietCalPerKg = jsonObject.getDouble("Diet Caloric Content (KCal/kg)");
+        Pet pet = new Pet(name, weight, dietCalPerKg);
         /*try {
             double mer = jsonObject.getDouble("MER");
         } catch (NullPointerException e) {

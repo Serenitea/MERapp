@@ -38,6 +38,17 @@ public class Pet implements Writable {
         this.portraitPic = ""; //todolater put the default img URL here instead of GUI
     }
 
+    public Pet(String petName,
+               double weightInKg,
+               double dietKCalPerKg) {
+        this.petName = petName;
+        this.weightInKg = weightInKg;
+        //this.mer = MERcalc.findMER(weightInKg);
+        this.mer = 0;
+        this.dietCalPerKg = dietKCalPerKg;
+        this.portraitPic = "";
+    }
+
     //GETTERS
     public String getPetName() {
         return this.petName;

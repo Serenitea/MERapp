@@ -35,7 +35,6 @@ import static java.awt.GridBagConstraints.BOTH;
 //todo later move edit pet button to pet display
 //todo if blank profile name should say "no profile name set"
 //todo later maybe - add duplicate check for editing pet as well?? naah
-//TODO  Warns user if they attempt to create a pet with a duplicate name (not case-sensitive)
 //todo later ?unsaved changes
 //tofix dietCal saved properly
 
