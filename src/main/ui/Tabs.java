@@ -24,6 +24,9 @@ public class Tabs extends JComponent {
         return button;
     }
 
+
+
+
     //REQUIRES: the GUI currently is displaying MainTab, and no other tabs are open.
     //EFFECT: creates a JButton that will prompt mainTabListener to "close" the current profile session.
     public static JButton exitProfileButton(ActionListener actionListener) {
@@ -31,6 +34,8 @@ public class Tabs extends JComponent {
         button.addActionListener(actionListener);
         return button;
     }
+
+
 
     //EFFECTS: creates a JLabel to serve as a header for the intro UI
     public static JLabel header() {

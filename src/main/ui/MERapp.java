@@ -26,9 +26,6 @@ import static java.awt.GridBagConstraints.BOTH;
 // user interface methods
 //todo later can't save if both profile name and pet list are empty
 //todo later if no diet calories entered, display that instead of 0
-
-//todo later should add instructions to put in positive num,
-//and to put in 0 if dunno weight
 //todo later warning if weight is over 80?kg
 //todo later change button names to "exit app" and "close profile"
 //todo later ask for Owner name when saving
@@ -37,6 +34,11 @@ import static java.awt.GridBagConstraints.BOTH;
 //todo later formatting polish
 //todo later move edit pet button to pet display
 //todo if blank profile name should say "no profile name set"
+//TODO  Warns user if they attempt to create a pet with a duplicate name (not case-sensitive)
+//TODO ?unsaved changes
+//TODO add confirm save: prompt to save session when exiting profile or close app from dash.
+// JDialog confirmation for closeapp and exitprofile
+//tofix dietCal saved properly
 
 public class MERapp extends JFrame implements Runnable {
     public static final int FRAME_WIDTH = 450;
@@ -114,6 +116,11 @@ public class MERapp extends JFrame implements Runnable {
         initIntroUI();
     }
 
+    /*
+    REQUIRES:
+    MODIFIES: this
+    EFFECTS: initializes
+     */
     private void initFields() {
         petList = new PetList();
         petArrayList = new ArrayList<>();
@@ -141,7 +148,7 @@ public class MERapp extends JFrame implements Runnable {
     //Listeners
 
 
-    //TODO  Warns user if they attempt to create a pet with a duplicate name (not case-sensitive)
+
 
     private void initIntroUI() {
         initIntroListener();
@@ -168,19 +175,28 @@ public class MERapp extends JFrame implements Runnable {
                     loadSavedProfileEvent();
                     break;
                 case "Submit":
-                    System.out.println("submitting new profile info"); //print
                     createNewProfileInputEvent();
                     break;
                 case "Cancel":
-                    setJPanel(introPaneUI, new Tabs.IntroMenuPane(introPaneUIListener));
-                    frame.setContentPane(introPaneUI);
-                    frame.setVisible(true);
+                    cancelCreateNewProfileEvent();
+                    break;
+                case "Close App":
+                    confirmCloseAppEvent();
                     break;
                 default:
                     JOptionPane.showMessageDialog(frame, "Unknown event");
                     break;
             }
         };
+    }
+
+    private void cancelCreateNewProfileEvent() {
+        setJPanel(introPaneUI, new Tabs.IntroMenuPane(introPaneUIListener));
+        frame.setContentPane(introPaneUI);
+        frame.setVisible(true);
+    }
+
+    private void confirmCloseAppEvent() {
     }
 
     /*
@@ -198,15 +214,16 @@ public class MERapp extends JFrame implements Runnable {
                 case "Edit a Pet":
                     editPetEvent();
                     break;
-                case "Save Session": //todo later - modify empty petlist case - should still save?
+                case "Save Session":
                     saveSessionEvent();
                     break;
-                case "Exit Profile": //todo later implement more secure methods
-                    exitProfileEvent();
-                    //TODO add confirm save: prompt to save session when exiting profile or close app from dash
+                case "Exit Profile":
+                    confirmExitProfileEvent();
+                    break;
+                case "Close App":
+                    confirmCloseAppEvent();
                     break;
                 default:
-                    System.out.println(editPetTab); //print
                     JOptionPane.showMessageDialog(frame, "Unknown event");
                     break;
             }
@@ -594,17 +611,34 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
     MODIFIES: data.json
     EFFECTS:
      */
+    private void confirmExitProfileEvent() {
+        int response;
+        response = JOptionPane.showConfirmDialog(null,
+                "Do you want to save this session?",
+                "Confirm Exit Profile",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+        switch (response) {
+            case JOptionPane.YES_OPTION: //save and exit profile
+                saveSessionEvent();
+                exitProfileEvent();
+                break;
+            case JOptionPane.NO_OPTION: //exit without saving
+                exitProfileEvent();
+                break;
+            case JOptionPane.CANCEL_OPTION: //don't exit
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + response);
+        }
+    }
+
     private void exitProfileEvent() {
         frame.setVisible(false);
-//        frame = null;
         introPaneUI = new JPanel();
-//        introPanel.add(new Tabs.IntroMenuPanel(introListener));
-//        frame.setContentPane(introPanel);
-        System.out.println("exited profile"); //print
         initFields();
         initFrame();
         initIntroUI();
-        System.out.println(tabbedPaneUI); //print
     }
 
     /*
