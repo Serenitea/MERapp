@@ -48,7 +48,7 @@ class JsonWriterTest extends JsonTest {
     void testWriterGeneralPetList() {
         jsonWriter = new JsonWriter("./data/testWriterGeneralPetList.json");
         Pet newTestPet1 = new Pet("Zoomer", 10.1);
-        Pet newTestPet2 = new Pet("Trist", 15.3);
+        Pet newTestPet2 = new Pet("Trist", 15.3, 513);
         testPetList.add(newTestPet1);
         testPetList.add(newTestPet2);
         testPetList.setOwnerName("Singer");
@@ -63,7 +63,7 @@ class JsonWriterTest extends JsonTest {
             List<Pet> readPets = readPetList.getPetArray();
             assertEquals(2, readPets.size());
             checkPet("Zoomer", 10.1, 0, 0, readPets.get(0));
-            checkPet("Trist", 15.3, 0, 0, readPets.get(1));
+            checkPet("Trist", 15.3, 0, 513, readPets.get(1));
 
         } catch (IOException e) {
             fail("Exception should not have been thrown");

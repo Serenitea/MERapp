@@ -28,7 +28,7 @@ class PetTest {
         testPet1 = new Pet("Pretzl",
                 19.5);
         testPet2 = new Pet("Peach",
-                40);
+                40, 450.3);
     }
 
     @Test
@@ -64,7 +64,7 @@ class PetTest {
         testPet1.setNewDiet(42.0);
         assertEquals(42.0, testPet1.getDietCalPerKg());
 
-        assertEquals(0, testPet2.getDietCalPerKg());
+        assertEquals(450.3, testPet2.getDietCalPerKg());
         testPet2.setNewDiet(4.0);
         assertEquals(4.0, testPet2.getDietCalPerKg());
     }
