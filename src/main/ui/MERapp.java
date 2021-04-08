@@ -2,7 +2,6 @@ package ui;
 
 import model.Pet;
 import model.PetList;
-import org.json.JSONException;
 import persistence.JsonReader;
 import persistence.JsonWriter;
 
@@ -16,6 +15,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import static java.awt.GridBagConstraints.BOTH;
 
@@ -24,96 +24,76 @@ import static java.awt.GridBagConstraints.BOTH;
 //
 //
 // user interface methods
-//tododoc
 //todo later can't save if both profile name and pet list are empty
+//todo later if no diet calories entered, display that instead of 0
 
-//TODO save not working??? when saving from null
+//todo later should add instructions to put in positive num,
+//and to put in 0 if dunno weight
 //todo later warning if weight is over 80?kg
-//TODO fix IndexOutOfBoundException when deleting pet
-//tododoc
+//todo later change button names to "exit app" and "close profile"
+//todo later ask for Owner name when saving
 //todo later add exception detail of trying to edit a pet that's already being edited
+//todo later set fixed size for splitPane
 //todo later formatting polish
 //todo later move edit pet button to pet display
 //todo if blank profile name should say "no profile name set"
-//TODO if clicking edit a pet when there's no pets -> dialog "no pets"
-//TODO found bug when there's no saved profile and then clicking "load saved profile"
+
 public class MERapp extends JFrame implements Runnable {
     public static final int FRAME_WIDTH = 450;
     public static final int FRAME_HEIGHT = 400;
-    public static final int MIN_WIDTH = 450;
-    public static final int MIN_HEIGHT = 400;
+    public static final Dimension MIN_FRAME_SIZE = new Dimension(450, 400);
     private static final Dimension PORTRAIT_PIC_SIZE = new Dimension(75, 75);
 
-    //    private static final String JSON_STORE_URL = "./data/profiles.json";
-    private static final String JSON_STORE_URL = "./data/test.json";
+    private static final String JSON_STORE_URL = "./data/profiles.json"; //normal
+    //        private static final String JSON_STORE_URL = "./data/test.json"; //empty case for testing
+//        private static final String JSON_STORE_URL = "./data/fail.json"; //no such file case for
     private static final String DEFAULT_PET_PORTRAIT_URL = "./data/dog.png";
     private static final String FRAME_ICON_URL = "./data/paw.png";
-
+    int index; // -1 represents no index selected
     private JList<String> petJList; //for listSelectionListener
     private PetList petList;
     private ArrayList<Pet> petArrayList;
     private Pet currentPet;
-    int index;
 
-    private JFrame frame;
-    private JPanel introPaneUI = new JPanel(); //used for 2 displays
     private JsonWriter jsonWriter;
     private JsonReader jsonReader;
-
+    //listeners
     private ActionListener introPaneUIListener;
     private ActionListener mainTabListener;
     private ListSelectionListener leftPaneSelectListener;
-
-    private GridBagLayout gridBagLayout;
-    private JPanel addPetTab;
+    //
+    private JFrame frame;
+    private JPanel introPaneUI = new JPanel(); //used for 2 displays
+    private AddNewPetTab addPetTab;
     private JScrollPane leftPane;
-    private JPanel createNewPetInputPane;
-    private JButton deletePetButton;
+    private JPanel rightPane;
     private Tabs.NewProfilePanel createNewProfilePane;
-
-    private MainMenuTab mainTab;
     private JSplitPane mainTabSplitPane;
     private JTabbedPane tabbedPaneUI;
-
-    private JPanel editPetTab;
-    private NumberFormat decimalFormat = new DecimalFormat();
-    private JPanel editPane;
-    private JLabel weightLabel;
-    private JFormattedTextField weightField;
-    private JTextField nameField;
-    private JFormattedTextField dietCalField;
-    private JLabel nameLabel;
-    private JLabel dietCalLabel;
+    private EditPetTab editPetTab;
 
 
-
+    //==============================================================
 
     /*
-    EFFECTS: constructs the Pet MER application and initializes json I/O
+    MODIFIES: app title
+    EFFECTS: constructs the Pet Weight Management application and initializes fields, GUI, and json I/O
      */
     //tododoc
     public MERapp() {
         super("Pet Weight Management App");
-
         run();
 //        EventQueue.invokeLater(this::run);
     }
 
-    //tododoc
-    //EFFECTS: converts a Pet ArrayList to a ListModel of pet names
-    private static ListModel<String> castNameToListModel(ArrayList<Pet> petArrayList) {
-        DefaultListModel<String> petListModel = new DefaultListModel<>();
-        for (Pet pet : petArrayList) {
-            petListModel.addElement(pet.getPetName());
-        }
-        return petListModel;
-    }
 
-    private JList<String> toNamesJList(ArrayList<Pet> petArrayList) {
-        ListModel<String> petNameListModel = castNameToListModel(petArrayList);
-        JList<String> petNameJList = new JList<String>(petNameListModel);
-        return petNameJList;
-    }
+
+
+    //==============================================================
+
+    // MODIFIES: this
+    // EFFECTS: initializes the JSON reader and writer and attempts to read from the provided file URL.
+    // also initializes the PetList and Pet ArrayList fields.
 
     /**
      * When an object implementing interface <code>Runnable</code> is used
@@ -126,57 +106,73 @@ public class MERapp extends JFrame implements Runnable {
      *
      * @see Thread#run()
      */
+    //starts running app by calling functions to initialize fields and launch the GUI;
     @Override
     public void run() {
-        initializeFields();
-        initializeFrame();
+        initFields();
+        initFrame();
+        initIntroUI();
     }
 
-    //==============================================================
-    //initialize app
-    //tododoc
-    private void initializeFields() {
+    private void initFields() {
         petList = new PetList();
         petArrayList = new ArrayList<>();
+        index = -1;
+        currentPet = null;
         jsonReader = new JsonReader(JSON_STORE_URL);
         jsonWriter = new JsonWriter(JSON_STORE_URL);
     }
 
-    //tododoc
-    private void initializeFrame() {
+    /*
+    REQUIRES: valid image from static URL
+    MODIFIES: this.frame, this.introPaneUI
+    EFFECTS: creates the main JFrame window that hosts all app components with the following presets
+             Preset characteristics: min size, frame image icon, close behaviour, title
+     */
+    private void initFrame() {
         frame = new JFrame("Pet Weight Management App GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         ImageIcon frameIcon = new ImageIcon(FRAME_ICON_URL);
         frame.setIconImage(frameIcon.getImage());
-        initIntroListener();
-        introPaneUI.add(new Tabs.IntroMenuPanel(introPaneUIListener));
-        frame.getContentPane().add(introPaneUI);
-        frame.setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
-        frame.setVisible(true);
+        frame.setMinimumSize(MIN_FRAME_SIZE);
     }
 
     //==============================================================
     //Listeners
-    //TODO prompt to save current Pet to json file when exiting profile
-    // or close app from dash
+
+
     //TODO  Warns user if they attempt to create a pet with a duplicate name (not case-sensitive)
-    //tododoc
+
+    private void initIntroUI() {
+        initIntroListener();
+        introPaneUI.add(new Tabs.IntroMenuPane(introPaneUIListener));
+        frame.getContentPane().add(introPaneUI);
+        frame.setVisible(true);
+    }
+    //todo later change the circumstance for preventing more open tabs
+    //to be based on num of tabs in tabbedpaneUI
+
+    /*
+    MODIFIES: this.introPaneUIListener
+    EFFECTS: when a Button in IntroUI is pressed, executes the associated command
+             will display "unknown event" message if the received command doesn't match an existing case
+     */
     private void initIntroListener() {
         introPaneUIListener = e -> {
             String buttonName = e.getActionCommand();
             switch (buttonName) {
                 case "New Profile": //can also use if (source == objName) for cases
-                    setCreateNewProfileUI(); //HERE
+                    createNewProfileTabEvent();
                     break;
                 case "Load saved profile":
-                    loadSavedProfile();
+                    loadSavedProfileEvent();
                     break;
                 case "Submit":
-                    System.out.println("submitting new profile info");
-                    loadNewProfile();
+                    System.out.println("submitting new profile info"); //print
+                    createNewProfileInputEvent();
                     break;
                 case "Cancel":
-                    setJPanel(introPaneUI, new Tabs.IntroMenuPanel(introPaneUIListener));
+                    setJPanel(introPaneUI, new Tabs.IntroMenuPane(introPaneUIListener));
                     frame.setContentPane(introPaneUI);
                     frame.setVisible(true);
                     break;
@@ -187,38 +183,82 @@ public class MERapp extends JFrame implements Runnable {
         };
     }
 
+    /*
+    REQUIRES:
+    MODIFIES: this.mainTabListener
+    EFFECTS: initializes an ActionListener for mainTab's JButtons
+     */
     private void initMainListener() {
         mainTabListener = e -> {
             String buttonName = e.getActionCommand();
             switch (buttonName) {
                 case "Add New Pet":
-                    addNewPetEvent();
+                    addNewPetTabEvent();
                     break;
-                case "Edit a Pet": //TODO empty petlist case
+                case "Edit a Pet":
                     editPetEvent();
+                    break;
                 case "Save Session": //todo later - modify empty petlist case - should still save?
                     saveSessionEvent();
                     break;
                 case "Exit Profile": //todo later implement more secure methods
                     exitProfileEvent();
+                    //TODO add confirm save: prompt to save session when exiting profile or close app from dash
                     break;
                 default:
-                    System.out.println(editPetTab);
+                    System.out.println(editPetTab); //print
                     JOptionPane.showMessageDialog(frame, "Unknown event");
                     break;
             }
         };
     }
 
-    private void initlistSelectionListener() {
-        //tododoc
+    /*
+    REQUIRES: //toask would the existence of the JList be considered a requirement?
+    MODIFIES: this.leftPaneSelectListener
+    EFFECTS: initializes a ListSelectionListener. responds to single selection of the
+             JList of pet names displayed in the leftPane of the mainTab's JSplitPane.
+     */
+    private void initListSelectionListener() {
         leftPaneSelectListener = e -> {
-            JList<String> curPetJList = (JList) e.getSource();
-            index = curPetJList.getSelectedIndex();
-            updateRightPane();
+            JList<String> currentPetJList = (JList) e.getSource();
+            index = currentPetJList.getSelectedIndex();
+            rightPane = updateRightPane();
         };
     }
 
+    /*
+    REQUIRES:
+    MODIFIES:
+    EFFECTS:
+     */
+    public ActionListener addPetTabListener() {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String buttonName = e.getActionCommand();
+                switch (buttonName) {
+                    case "Submit":
+                        createNewPetEvent();
+                        break;
+                    case "Cancel":
+                        closeAddPetTabEvent();
+                        break;
+                    default:
+                        JOptionPane.showMessageDialog(frame, "Unknown event");
+                }
+            }
+        };
+    }
+
+    //==============================================================
+//beyond the initial intro panel - main menu
+    //going to main menu
+
+    /*
+    REQUIRES: assigned to appropriate JButtons of editPetTabListener
+    EFFECTS: returns a
+     */
     private ActionListener editPetTabListener() {
         return new ActionListener() {
             @Override
@@ -226,7 +266,7 @@ public class MERapp extends JFrame implements Runnable {
                 String buttonName = e.getActionCommand();
                 switch (buttonName) {
                     case "Okay":
-                        updatePetList();
+                        submitChangesEditPet();
                         closeEditTabEvent();
                         break;
                     case "Cancel":
@@ -244,86 +284,741 @@ public class MERapp extends JFrame implements Runnable {
         };
     }
 
-    //==============================================================
-//beyond the initial intro panel - main menu
-    //going to main menu
+    /*
+REQUIRES: frame, petList, petArrayList instantiated
+MODIFIES: this
+EFFECTS: instantiates the main profile UI and set visible in JFrame.
+         initializes associated listeners.
+ */
     private void launchMainMenu() {
         initMainListener();
-        initlistSelectionListener();
-        tabbedPaneUI = initializeTabs();
+        initListSelectionListener();
+        tabbedPaneUI = initMainTab();
 //        frame.getContentPane().add(tabbedPane);
         frame.setContentPane(tabbedPaneUI);
-        gridBagLayout = new GridBagLayout();
+//        gridBagLayout = new GridBagLayout();
 
         frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
         frame.setVisible(true);
     }
 
-    private void loadNewProfile() {
+    /*
+    REQUIRES: petList instantiated
+    MODIFIES: this.petList
+    EFFECTS: Receives user input from the "create new profile" form and set as petList's owner name.
+             null and strings are accepted as per JTextField's formatter.
+     */
+    private void createNewProfileInputEvent() {
         String profileName = createNewProfilePane.getProfileNameInput();
-        System.out.println(petList);
         petList.setOwnerName(profileName);
         launchMainMenu();
     }
 
-    //fields - name/string, weight/double, diet/double
+    //todo later add option to edit owner name
     //catch incorrect entries
     //updates the left panel of the splitPane with current data
     /*REQUIRES: no currently loaded profile (empty petList)
     MODIFIES: this
     EFFECTS: loads previously saved profiles from local json storage path*/
-    //todo later add option to edit owner name
-    public void loadSavedProfile() {
+    //       current fields - name/string, weight/double, diet/double
+    public void loadSavedProfileEvent() {
         try {
             petList = jsonReader.read();
             petArrayList = petList.getPetArray();
-            System.out.println("Loaded " + petList.getOwnerName() + " from " + JSON_STORE_URL);
+
             launchMainMenu();
         } catch (IOException e) {
-            System.out.println("Unable to read from file: " + JSON_STORE_URL);
-        } catch (JSONException e) {
-            System.out.println("No saved profile found at " + JSON_STORE_URL);
-            JOptionPane.showMessageDialog(frame, "No saved profile found at" + JSON_STORE_URL);
+            JOptionPane.showMessageDialog(frame, "Unable to read from file location: " + JSON_STORE_URL);
         }
     }
 
-    //tododoc
-    private JTabbedPane initializeTabs() {
-        initSplitPane(toNamesJList(petArrayList));
-        this.mainTab = new MainMenuTab(petList,
+    /*
+    REQUIRES: these fields instantiated: petList, petArrayList mainTabListener, leftPaneSelectListener, mainTabSplitPane
+    MODIFIES: this.mainTab
+    EFFECTS: initializes mainTab and returns a JTabbedPane with mainTab as its only tab.
+     */
+    private JTabbedPane initMainTab() {
+        initSplitPane(petArrayList);
+        MainTab mainTab = new MainTab(petList,
                 mainTabListener,
-                leftPaneSelectListener, mainTabSplitPane);
+                mainTabSplitPane);
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("Main Dashboard", mainTab);
         return tabs;
     }
 
-    //tododoc
-    private void initSplitPane(JList<String> toNamesJList) {
-        petJList = toNamesJList;
+    //
+    //==============================================================
+    //add profile
+    //
+    //todo later able to have multiple profiles (can add or remove)
+
+    /*
+    REQUIRES: petList and petArrayList instantiated
+    MODIFIES: this
+    EFFECTS: inits the JSplitPane which forms part of the opened profile dashboard UI.
+     allows selecting and viewing any pet in the opened profile.
+     */
+    private void initSplitPane(ArrayList<Pet> arrayList) {
+        petJList = toNamesJList(arrayList);
         petJList.addListSelectionListener(leftPaneSelectListener);
         mainTabSplitPane = new JSplitPane();
-        JPanel displayPane = new JPanel();
+        rightPane = new JPanel();
         leftPane = new JScrollPane(petJList);
         mainTabSplitPane.setLeftComponent(leftPane);
-        if (petArrayList.size() > 0) {
-            displayPane.add(new JLabel("No pet selected"));
-            mainTabSplitPane.setRightComponent(displayPane);
+        mainTabSplitPane.setRightComponent(rightPane);
+        emptyRightPane();
+    }
+
+    /*
+    REQUIRES:
+    MODIFIES: this.petList, this.createNewProfilePane, introPaneUI, frame
+    EFFECTS:
+     */
+    public void createNewProfileTabEvent() {
+        System.out.println("Create new profile"); //print
+//        petList = new PetList();
+        createNewProfilePane = new Tabs.NewProfilePanel(introPaneUIListener);
+        setJPanel(introPaneUI, createNewProfilePane);
+        frame.setContentPane(introPaneUI);
+        frame.setVisible(true);
+
+    }
+
+    /*
+    REQUIRES:
+    MODIFIES:
+    EFFECTS:
+            Resets currentPet to null.
+     */
+    private void createNewPetEvent() {
+        int count = petList.getPetArray().size();
+        submitAddNewPetTab(); //todo later warning for creating a pet with a duplicate name
+        if (petList.getPetArray().size() == count + 1) {
+            JOptionPane.showMessageDialog(frame,
+                    "Successfully added "
+                            + currentPet.getPetName()
+                            + " to profile.");
+            closeAddPetTabEvent(); //includes updating main dash
         } else {
-            displayPane.add(new JLabel("No pets in profile"));
-            mainTabSplitPane.setRightComponent(displayPane);
+            System.out.println("creating a pet was unsuccessful"); //print
         }
     }
 
+    //
+    //==============================================================
+    //add pet
+    //
 
-    //tododoc
+    /*
+    REQUIRES:
+    MODIFIES:
+    EFFECTS:
+     */
+    private void addNewPetTabEvent() {
+        if (!(addPetTab == null)) {
+            JOptionPane.showMessageDialog(frame, "You can only add one pet at a time");
+        } else {
+            System.out.println("add pet"); //print
+            addPetTab = new AddNewPetTab(addPetTabListener());
+            tabbedPaneUI.addTab("Create New Pet", addPetTab);
+            tabbedPaneUI.setSelectedComponent(addPetTab);
+        }
+    }
+
+    /*
+    REQUIRES: an instance of addPetTab is in tabbedPaneUI.
+    MODIFIES: this, this.tabbedPaneUI
+    EFFECTS: Closes the AddPetTab. Resets fields and updates main tab.
+     */
+    private void closeAddPetTabEvent() {
+        System.out.println("close window"); //print
+        tabbedPaneUI.remove(addPetTab);
+        addPetTab = null;
+        currentPet = null;
+        index = -1;
+        rightPane.removeAll();
+        updateMainDash();
+        frame.setVisible(true);
+    }
+
+    /*
+    REQUIRES: addPetTab is instantiated
+    MODIFIES: this.petList
+    EFFECTS: add a newly created Pet object to petList (the opened profile)
+             if inputs are valid, otherwise will display msg that create pet failed.
+     */
+    private void submitAddNewPetTab() {
+        System.out.println("adding new pet to pet list"); //print
+        currentPet = addPetTab.createNewPet();
+        System.out.println(currentPet); //print
+        if (currentPet == null) {
+            JOptionPane.showMessageDialog(frame, "Failed to"
+                    + " create pet. Please ensure that both the pet name"
+                    + " and weight are valid. Weight must be a positive"
+                    + " number. Please input 0 if you don't know your"
+                    + " pet's weight.");
+        } else {
+            petList.add(currentPet);
+        }
+    }
+
+    /*
+    REQUIRES:
+    MODIFIES:
+    EFFECTS: When the EditPet JButton is activated, checks whether all circumstances are met for editing.
+    Calls function to edit pet or display appropriate msg for situation.
+    Non-valid circumstances: No Pets in PetArrayList, no pet selected in JList,
+    OR there's already another editPetTab instance.
+     */
+    private void editPetEvent() {
+        if (petListIsEmpty()) {
+            JOptionPane.showMessageDialog(frame, "No pets in profile currently. "
+                    + "Select \"Add New Pet\" to create a new pet.");
+        } else if (index == -1) {
+            JOptionPane.showMessageDialog(frame, "Please select a pet to edit from the list of names.");
+        } else if (!(editPetTab == null)) {
+            JOptionPane.showMessageDialog(frame, "You can only edit one pet at a time");
+        } else {
+            //other option: (tabbedPaneUI.indexOfTabComponent(editPetTab) == -1)
+            System.out.println("index = " + index); //print
+            try {
+                editSelectedPet();
+            } catch (IndexOutOfBoundsException e) {
+                JOptionPane.showMessageDialog(frame, "Please select a pet to edit.");
+                System.out.println(e.getMessage()); //print
+            }
+        }
+    }
+
+    //
+    //==============================================================
+    //edit pet
+    //
+
+    private boolean petListIsEmpty() {
+        return (petList.getPetArray().size() <= 0);
+    }
+
+    //return true if owner name is empty string
+    private boolean noProfileName() {
+        String profileName = petList.getOwnerName();
+        return (Objects.equals(profileName, ""));
+    }
+
+    /*
+    REQUIRES: index returns a non-null valid Pet object from petArrayList
+    MODIFIES:
+    EFFECTS:
+     */
+    private void editSelectedPet() {
+        currentPet = petArrayList.get(index);
+        ActionListener editPetListener = editPetTabListener();
+        editPetTab = new EditPetTab(currentPet, editPetListener);
+        tabbedPaneUI.addTab("Edit " + currentPet.getPetName(), editPetTab);
+        tabbedPaneUI.setSelectedComponent(editPetTab);
+        System.out.println(petArrayList.get(index).getPetName()); //print
+        System.out.println("edit pet" + index); //print
+    }
+
+    /*
+    REQUIRES:
+    MODIFIES:
+    EFFECTS:
+     */
+    private void closeEditTabEvent() {
+        System.out.println("close window"); //print
+        tabbedPaneUI.remove(editPetTab);
+        editPetTab = null;
+        updateMainDash();
+        frame.setVisible(true);
+    }
+
+    /*
+    REQUIRES: jsonWriter instantiated
+    MODIFIES: data/profiles.json
+    EFFECTS: writes petList to URL location as json file. A new file is created if no file exists at that URL.
+     */
+    private void saveSessionEvent() {
+        System.out.println("save session"); //print
+        try {
+            jsonWriter.open();
+            jsonWriter.write(petList);
+            jsonWriter.close();
+            if (noProfileName()) {
+                JOptionPane.showMessageDialog(frame,
+                        petList.getOwnerName() + "Saved unnamed profile to " + JSON_STORE_URL);
+            } else {
+                JOptionPane.showMessageDialog(frame,
+                        "Saved " + petList.getOwnerName() + "'s profile to " + JSON_STORE_URL);
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Unable to write to file: " + JSON_STORE_URL); //print
+        }
+    }
+
+//    private void saveSessionEvent() {
+//        System.out.println("save session"); //print
+//        try {
+//            jsonWriter.open();
+//            jsonWriter.write(petList);
+//            jsonWriter.close();
+//            JOptionPane.showMessageDialog(frame,
+//                    "Saved " + petList.getOwnerName() + "'s profile to " + JSON_STORE_URL);
+//        } catch (FileNotFoundException e) {
+//            System.out.println("Unable to write to file: " + JSON_STORE_URL); //print
+//        }
+//    }
+
+    /*
+    REQUIRES: EditPetTab instantiated.
+    MODIFIES: petList
+    EFFECTS: remove pet found at the current index
+     */
+    private void deletePetFromPetList() {
+        currentPet = petList.getPetArray().get(index);
+        String deletedPetName = currentPet.getPetName();
+        petList.remove(currentPet);
+        JOptionPane.showMessageDialog(frame, String.format("Successfully removed %s from profile.", deletedPetName));
+    }
+
+    //
+    //
+    //==============================================================
+    //save session
+
+    //
+
+    /*
+    REQUIRES: petList is instantiated.
+    MODIFIES: data.json
+    EFFECTS:
+     */
+    private void exitProfileEvent() {
+        frame.setVisible(false);
+//        frame = null;
+        introPaneUI = new JPanel();
+//        introPanel.add(new Tabs.IntroMenuPanel(introListener));
+//        frame.setContentPane(introPanel);
+        System.out.println("exited profile"); //print
+        initFields();
+        initFrame();
+        initIntroUI();
+        System.out.println(tabbedPaneUI); //print
+    }
+
+    /*
+    REQUIRES:
+    MODIFIES: this
+    EFFECTS: updates the edited pet and opened profile with user input.
+     */
+    private void submitChangesEditPet() {
+        currentPet = editPetTab.getEditedPet();
+        index = editPetTab.getIndex();
+        petList.getPetArray().set(index, currentPet);
+        System.out.println("update pet list"); //print
+    }
+
+    //
+    //==============================================================
+    //remove pet / exit profile
+
+    /*
+    REQUIRES: leftPane and rightPane instantiated
+    MODIFIES:this.leftPane, this.rightPane
+    EFFECTS: updates petArrayList with current petList and calls functions to update each side of the JSplitPane
+     */
+    private void updateMainDash() {
+        System.out.println("updating dash"); //print
+        petArrayList = petList.getPetArray();
+
+        updateLeftPane();
+        emptyRightPane();
+    }
+
+    /*
+    REQUIRES:
+    MODIFIES:
+    EFFECTS:
+     */
+    private void emptyRightPane() {
+        rightPane.removeAll();
+        if (petListIsEmpty()) {
+            rightPane.add(new JLabel("No pets in profile. Select \"Add New Pet\" to create a pet."));
+        } else {
+            rightPane.add(new JLabel("No pet selected"));
+        }
+    }
+
+    /*
+    REQUIRES: petArrayList is initialized
+              mainTabSplitPane is an initialized JSplitPane.
+    MODIFIES: this.petJList, this.petPane, this.mainTabSplitPane
+    EFFECTS: updates the list of pet names in the L SplitPane.
+     */
+    private void updateLeftPane() {
+        petJList = toNamesJList(petArrayList);
+        petJList.addListSelectionListener(leftPaneSelectListener);
+        leftPane = new JScrollPane(petJList);
+        mainTabSplitPane.setLeftComponent(leftPane);
+    }
+
+    /*
+    REQUIRES: index returns a valid Pet object from petArrayList
+    MODIFIES: this.mainTabSplitPane, this.currentPet
+    EFFECTS: when the corresponding Pet is selected in the L pane,
+             displays a default portrait pic and details for that pet.
+     */
+    private JPanel updateRightPane() {
+        JPanel displayPane = new JPanel();
+        displayPane.setLayout(new BoxLayout(displayPane, BoxLayout.Y_AXIS));
+
+
+        currentPet = petArrayList.get(index);
+
+        //portrait pic
+        ImageIcon imgIcon = setDefaultPortraitImgIcon();
+        JLabel portraitPic = new JLabel(imgIcon, SwingConstants.CENTER);
+        displayPane.add(portraitPic);
+        displayPane.add(new JLabel("Selected Pet: " + currentPet.getPetName()));
+        displayPane.add(new JLabel("Weight (kg): " + currentPet.getWeight()));
+        displayPane.add(new JLabel("Current diet calories (KCal/kg): " + currentPet.getDietCalPerKg()));
+        mainTabSplitPane.setRightComponent(displayPane);
+        return displayPane;
+    }
+
+    //todomaybe use SizeDisplayer to resize img
+    /*
+    REQUIRES: valid picture image icon imported from static URL
+    EFFECTS: returned a rescaled image of the specified dimensions of PORTRAIT_PIC_SIZE
+     */
+    private ImageIcon setDefaultPortraitImgIcon() {
+        ImageIcon imgFromURL = new ImageIcon(DEFAULT_PET_PORTRAIT_URL);
+        Image img = imgFromURL.getImage();
+        Image scaledImg = img.getScaledInstance(PORTRAIT_PIC_SIZE.width, PORTRAIT_PIC_SIZE.height, Image.SCALE_FAST);
+        return new ImageIcon(scaledImg);
+    }
+
+    //EFFECTS: add a given Component to a given JPanel
+    public void setJPanel(JPanel panel, Component component) {
+        panel.removeAll();
+        panel.add(component);
+    }
+
+    //EFFECTS: converts a Pet ArrayList to a JList of pet names as strings
+    public JList<String> toNamesJList(ArrayList<Pet> petArrayList) {
+        ListModel<String> petNameListModel = toListModel(petArrayList);
+        JList<String> petNameJList = new JList<String>(petNameListModel);
+        return petNameJList;
+    }
+
+    //EFFECTS: converts a Pet ArrayList to a ListModel of pet names as Strings
+    public static ListModel<String> toListModel(ArrayList<Pet> petArrayList) {
+        DefaultListModel<String> petListModel = new DefaultListModel<>();
+        for (Pet pet : petArrayList) {
+            petListModel.addElement(pet.getPetName());
+        }
+        return petListModel;
+    }
+
+    //creates and runs the UI tab for creating adding a new pet
+    //user may input and submit pet traits into text fields to create new pet
+    //user may also cancel pet creation by the "cancel" JButton
+    public static class AddNewPetTab extends JPanel {
+        ActionListener addPetListener;
+        JButton createPetButton;
+        JButton backButton;
+        JPanel buttonPane;
+        private JPanel createNewPetInputPane;
+        private final NumberFormat decimalFormat = new DecimalFormat();
+        //        private NumberFormat decimalFormat = new DecimalFormat("PositivePattern");
+        private JLabel weightLabel;
+        private JFormattedTextField weightField;
+        private JTextField nameField;
+        private JFormattedTextField dietCalField;
+        private JLabel nameLabel;
+        private JLabel dietCalLabel;
+        private final JLabel instructionLabel = new JLabel("Please enter your pet's information below",
+                SwingConstants.CENTER);
+        private double weightInput;
+        private String nameInput;
+        private double dietCalInput;
+
+        //inits the UI form for AddNewPetTab
+        public AddNewPetTab(ActionListener addPetTabListener) {
+            this.addPetListener = addPetTabListener;
+            setCreateNewPetInputPane();
+            //init buttons
+            createPetButton = new JButton("Submit");
+            backButton = new JButton("Cancel");
+            createPetButton.addActionListener(addPetListener);
+            backButton.addActionListener(addPetListener);
+            //init button panel
+            buttonPane = new JPanel(new GridLayout(1, 2));
+            buttonPane.add(createPetButton);
+            buttonPane.add(backButton);
+            buttonPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            this.add(instructionLabel);
+            this.add(createNewPetInputPane, BorderLayout.CENTER);
+            this.add(buttonPane, BorderLayout.SOUTH);
+        }
+
+        /*
+        MODIFIES: this
+        EFFECTS: inits the JPanel displaying user input text fields and their labels
+         */
+        private void setCreateNewPetInputPane() {
+            this.weightLabel = new JLabel("Weight (kg) *");
+            this.weightField = new JFormattedTextField(decimalFormat);
+            this.nameLabel = new JLabel("Pet Name *");
+            this.nameField = new JTextField();
+            this.dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
+            this.dietCalField = new JFormattedTextField(decimalFormat);
+
+            //todo forbid >1 tab of AddPetTab
+            //todo check that name and weight are both filled - provide more details
+            createNewPetInputPane = new JPanel();
+            createNewPetInputPane.setLayout(new GridLayout(3, 2));
+            createNewPetInputPane.add(nameLabel);
+            createNewPetInputPane.add(nameField);
+            createNewPetInputPane.add(weightLabel);
+            createNewPetInputPane.add(weightField);
+            createNewPetInputPane.add(dietCalLabel);
+            createNewPetInputPane.add(dietCalField);
+        }
+
+
+        /*
+        REQUIRES:
+        MODIFIES:
+        EFFECTS: returns true if the input is a valid positive number.
+        //value of 0 is allowed if the user doesn't know pet weight.
+         */
+        private boolean validWeightInput() {
+            try {
+                this.weightInput = ((Number) weightField.getValue()).doubleValue();
+                if (weightInput > 0) {
+                    return true;
+                }
+            } catch (NullPointerException e) {
+                return false;
+            }
+            return false;
+        }
+
+        //checks if nameField returns a valid name String
+        private boolean validNameInput() {
+            try {
+                nameInput = nameField.getText();
+                return true;
+            } catch (NullPointerException e) {
+                return false;
+            }
+        }
+
+        //checks if dietCalField returns a positive double type number
+        private boolean validDietCalInput() {
+            try {
+                dietCalInput = ((Number) dietCalField.getValue()).doubleValue();
+                if (weightInput > 0) {
+                    return true;
+                }
+            } catch (NullPointerException e) {
+                return false;
+            }
+            return false;
+        }
+
+        /*
+        MODIFIES: this
+        EFFECTS: returns a Pet object if both name and weight inputs are valid.
+         */
+        public Pet createNewPet() {
+            if (validNameInput() && validWeightInput()) {
+                Pet newPet = new Pet(nameInput, weightInput);
+                if (validDietCalInput()) {
+                    newPet.setNewDiet(dietCalInput);
+                }
+                return newPet;
+            } else {
+                return null;
+            }
+        }
+
+    }
+
+
+    /*
+    REQUIRES: index refers to a valid Pet object in PetArrayList
+    MODIFIES: this.EditPetTab
+    EFFECTS: creates EditPetTab's form.
+     */
+    private class EditPetTab extends JPanel {
+        int index;
+        Pet currentPet;
+        JButton savePetButton;
+        JButton backButton;
+        ActionListener editPetListener;
+        JPanel buttonPane;
+        JPanel deletePetPane;
+        private NumberFormat decimalFormat = new DecimalFormat();
+        private JPanel editPane;
+        private JLabel weightLabel;
+        private JFormattedTextField weightField;
+        private JTextField nameField;
+        private JFormattedTextField dietCalField;
+        private JLabel nameLabel;
+        private JLabel dietCalLabel;
+        private double weightInput;
+        private String nameInput;
+        private double dietCalInput;
+
+        //constructor
+        public EditPetTab(Pet pet, ActionListener editPetListener) {
+            this.currentPet = pet;
+            this.index = petArrayList.indexOf(pet);
+            this.editPetListener = editPetListener;
+
+            this.buttonPane = setEditPetTabButtonPane();
+            this.editPane = setEditPetTabEditPane();
+            this.deletePetPane = setDeletePetPane();
+
+            //add panels to tab, labels on left, text fields on right
+            this.add(editPane, BorderLayout.CENTER);
+            this.add(deletePetPane, BorderLayout.EAST);
+            this.add(buttonPane, BorderLayout.SOUTH);
+        }
+
+        //REQUIRES: actionListener with associated actions for the removePet JButton
+        //MODIFIES: this
+        //EFFECTS: Creates DeletePet button panel - houses DeletePet button + other info in future
+        private JPanel setDeletePetPane() {
+            JPanel infoPane = new JPanel();
+            JButton deletePetButton = new JButton("Delete this pet");
+            deletePetButton.addActionListener(editPetListener);
+            infoPane.add(deletePetButton);
+            return infoPane;
+        }
+
+        /*
+        REQUIRES: actionListener with associated actions for all JButtons
+        MODIFIES: this
+        EFFECTS: creates JPanel containing buttons for the EditPetTab UI
+                 Buttons: savePetButton, backButton
+         */
+        private JPanel setEditPetTabButtonPane() {
+            this.savePetButton = new JButton("Okay");
+            this.backButton = new JButton("Cancel");
+            this.savePetButton.addActionListener(editPetListener);
+            this.backButton.addActionListener(editPetListener);
+            //buttons panel, save or back
+            JPanel buttonPane = new JPanel(new GridLayout(1, 2));
+            buttonPane.add(savePetButton);
+            buttonPane.add(backButton);
+            buttonPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            return buttonPane;
+        }
+
+        /*
+        MODIFIES: this
+        EFFECTS: Construct JPanel input form with Text label and editable text field
+                 for each pet trait.
+         */
+        private JPanel setEditPetTabEditPane() {
+            this.weightLabel = new JLabel("Weight (kg)");
+            this.nameLabel = new JLabel("Pet Name");
+            this.dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
+
+            //editPane fields
+            decimalFormat = new DecimalFormat();
+            weightField = new JFormattedTextField(decimalFormat);
+            weightField.setValue(currentPet.getWeight());
+            nameField = new JTextField();
+            nameField.setText(currentPet.getPetName());
+            dietCalField = new JFormattedTextField(decimalFormat);
+            dietCalField.setValue(currentPet.getDietCalPerKg());
+
+            editPane = new JPanel();
+            editPane.setLayout(new GridLayout(3, 2));
+            editPane.add(nameLabel);
+            editPane.add(nameField);
+            editPane.add(weightLabel);
+            editPane.add(weightField);
+            editPane.add(dietCalLabel);
+            editPane.add(dietCalField);
+            return editPane;
+        }
+
+        //GETTER
+        public int getIndex() {
+            return index;
+        }
+
+        //checks if weightField returns a positive double type number
+        private boolean validWeightInput() {
+            try {
+                this.weightInput = ((Number) weightField.getValue()).doubleValue();
+                if (weightInput > 0) {
+                    return true;
+                }
+            } catch (NullPointerException e) {
+                return false;
+            }
+            return false;
+        }
+
+        //checks if nameField returns a valid name String
+        private boolean validNameInput() {
+            try {
+                nameInput = nameField.getText();
+                return true;
+            } catch (NullPointerException e) {
+                return false;
+            }
+        }
+
+        //checks if dietCalField returns a positive double type number
+        private boolean validDietCalInput() {
+            try {
+                dietCalInput = ((Number) dietCalField.getValue()).doubleValue();
+                if (weightInput > 0) {
+                    return true;
+                }
+            } catch (NullPointerException e) {
+                return false;
+            }
+            return false;
+        }
+
+        /*
+        MODIFIES: this
+        EFFECTS: returns a Pet object if all inputs are valid.
+         */
+        public Pet getEditedPet() {
+            if (validNameInput() && validWeightInput() && validDietCalInput()) {
+                Pet editedPet = new Pet(nameInput, weightInput);
+                editedPet.setNewDiet(dietCalInput);
+//                if (validDietCalInput()) {
+//                    newPet.setNewDiet(dietCalInput);
+//                }
+                return editedPet;
+            } else {
+                return null;
+            }
+        }
+
+    }
+
     //todo later change "close app" button to "close profile"
-    //4 rows 3 columns
-    public static class MainMenuTab extends JPanel {
-        private static PetList petList;
+    //Class for the main user profile interface.
+    //SplitPane: in L pane, User may select any pet in the profile from a list of pets.
+    //           the R pane will dynamically update with each selection to display individual pet details
+    //           default portrait pic is loaded with each Pet display - currently no method to change pet portraits
+    public class MainTab extends JPanel {
+        PetList petList;
         ArrayList<Pet> petArrayList;
-        JSplitPane managePetsPanel;
-        Boolean emptyPetList;
+        JSplitPane splitPanePetsPanel;
+        //        Boolean isPetListEmpty;
         ActionListener actionListener;
         GridBagLayout gridBagLayout = new GridBagLayout();
         GridBagConstraints gbc;
@@ -332,30 +1027,35 @@ public class MERapp extends JFrame implements Runnable {
         JButton savePetButton = new JButton("Save Session");
         ListModel<String> petListModel;
 
-        //tododoc
-        public MainMenuTab(PetList petList, ActionListener actionListener,
-                           ListSelectionListener listSelectionListener, JSplitPane splitPane1) {
-            managePetsPanel = splitPane1;
+        /*
+        REQUIRES: petArrayList cannot be null
+        MODIFIES:
+        EFFECTS:
+         */
+        //instantiates mainTab with a GridBagLayout of 4 rows and 3 columns
+        public MainTab(PetList petList, ActionListener actionListener,
+                       JSplitPane splitPane1) {
+            this.splitPanePetsPanel = splitPane1;
             this.petList = petList;
-            petArrayList = petList.getPetArray();
-            emptyPetList = (petArrayList.size() <= 0);
+            this.petArrayList = petList.getPetArray();
+//            isPetListEmpty = (petArrayList.size() <= 0);
             this.setLayout(gridBagLayout);
             gbc = new GridBagConstraints();
             gbc.fill = BOTH;
             this.actionListener = actionListener;
             addActionListeners();
-            this.petListModel = castNameToListModel(petArrayList);
-            this.addWithConstraints(mainMenuHeader(), 3, 0, 0);
-            this.addWithConstraints(managePetsPanel, 3, 0, 1);
+            this.petListModel = toListModel(petArrayList);
+            this.addWithConstraints(mainTabHeader(), 3, 0, 0);
+            this.addWithConstraints(splitPanePetsPanel, 3, 0, 1);
             this.addWithConstraints(newPetButton, 1, 0, 2);
             this.addWithConstraints(editPetButton, 1, 1, 2);
             this.addWithConstraints(savePetButton, 1, 2, 2);
             this.addWithConstraints(buttonPane(actionListener), 3, 0, 3);
         }
 
-        private static JPanel buttonPane(ActionListener actionListener) {
+        private JPanel buttonPane(ActionListener actionListener) {
             JPanel pane = new JPanel(new BorderLayout());
-            JButton closeButton = Tabs.closeButton(actionListener);
+            JButton closeButton = Tabs.closeAppButton(actionListener);
             JButton exitProfileButton = Tabs.exitProfileButton(actionListener);
 
             pane.add(closeButton, BorderLayout.WEST);
@@ -364,16 +1064,16 @@ public class MERapp extends JFrame implements Runnable {
         }
 
         //EFFECTS: returns a JLabel of the main menu's header (the app title)
-        private static JPanel mainMenuHeader() {
+        private JPanel mainTabHeader() {
             JLabel userLabel;
             String profileName = petList.getOwnerName();
-            if (profileName == "") {
+            if (Objects.equals(profileName, "")) {
                 userLabel = new JLabel("No Profile Name", SwingConstants.CENTER);
             } else {
                 userLabel = new JLabel("Profile Name: " + profileName, SwingConstants.CENTER);
             }
-            System.out.println("profile name: " + petList.getOwnerName());
-            System.out.println(petList);
+            System.out.println("profile name: " + petList.getOwnerName()); //print
+            System.out.println(petList); //print
             JLabel label = new JLabel("Pet Weight Management App Dashboard", SwingConstants.CENTER);
             JPanel headerPanel = new JPanel(new BorderLayout());
             headerPanel.add(label, BorderLayout.NORTH);
@@ -397,356 +1097,5 @@ public class MERapp extends JFrame implements Runnable {
         }
 
     }
-
-    //
-    //==============================================================
-    //add profile
-    //
-    //todo later able to have multiple profiles (can add or remove)
-    public void setCreateNewProfileUI() { //HERE#2
-        System.out.println("Create new profile");
-        petList = new PetList();
-        createNewProfilePane = new Tabs.NewProfilePanel(introPaneUIListener);
-        setJPanel(introPaneUI, createNewProfilePane);
-        frame.setContentPane(introPaneUI);
-        frame.setVisible(true);
-
-    }
-
-    private ActionListener addPetTabListener() {
-        return new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String buttonName = e.getActionCommand();
-                switch (buttonName) {
-                    case "Submit":
-                        createNewPetEvent();
-                        break;
-                    case "Cancel":
-                        closeAddPetTabEvent();
-                        break;
-                    default:
-                        JOptionPane.showMessageDialog(frame, "Unknown event");
-                }
-            }
-        };
-    }
-
-    private void createNewPetEvent() {
-        int count = petList.getPetArray().size();
-        addNewToPetList(); //todo later warning for creating a pet with a duplicate name
-        if (petList.getPetArray().size() == count + 1) {
-            System.out.println("sucessfully created pet");
-            closeAddPetTabEvent(); //includes updating main dash
-        } else {
-            System.out.println("creating a pet was unsuccessful");
-        }
-    }
-
-    private void closeAddPetTabEvent() {
-        System.out.println("close window");
-        tabbedPaneUI.remove(addPetTab);
-        addPetTab = null;
-        updateMainDash();
-        frame.setVisible(true);
-    }
-
-    //
-    //==============================================================
-    //add pet
-    //
-    private void addNewPetEvent() {
-        System.out.println("add pet");
-        addPetTab = new JPanel();
-        ActionListener addPetListener = addPetTabListener();
-
-        setCreateNewPetInputPane();
-
-        JButton createPetButton = new JButton("Submit");
-        JButton backButton = new JButton("Cancel");
-        createPetButton.addActionListener(addPetListener);
-        backButton.addActionListener(addPetListener);
-        JPanel buttonPane = new JPanel(new GridLayout(1, 2));
-        buttonPane.add(createPetButton);
-        buttonPane.add(backButton);
-        buttonPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        addPetTab.add(new JLabel("Please enter your pet's information below", SwingConstants.CENTER));
-        addPetTab.add(createNewPetInputPane, BorderLayout.CENTER);
-        addPetTab.add(buttonPane, BorderLayout.SOUTH);
-
-        tabbedPaneUI.addTab("Create New Pet", addPetTab);
-        tabbedPaneUI.setSelectedComponent(addPetTab);
-    }
-
-    private void setCreateNewPetInputPane() {
-        weightLabel = new JLabel("Weight (kg) * (required)");
-        weightField = new JFormattedTextField(decimalFormat);
-        nameLabel = new JLabel("Pet Name * (required)");
-        nameField = new JTextField();
-        dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
-        dietCalField = new JFormattedTextField(decimalFormat);
-
-        //todo forbid >1 tab of AddPetTab
-        //todo check that name and weight are both filled - provide more details
-        createNewPetInputPane = new JPanel();
-        createNewPetInputPane.setLayout(new GridLayout(3, 2));
-        createNewPetInputPane.add(nameLabel);
-        createNewPetInputPane.add(nameField);
-        createNewPetInputPane.add(weightLabel);
-        createNewPetInputPane.add(weightField);
-        createNewPetInputPane.add(dietCalLabel);
-        createNewPetInputPane.add(dietCalField);
-    }
-
-    private void addNewToPetList() {
-        System.out.println("adding new pet to pet list");
-        //get name and weight for instantiating new pet
-        try {
-            String nameInput = nameField.getText();
-            double weightInput = ((Number) weightField.getValue()).doubleValue();
-            Pet newPet = new Pet(nameInput, weightInput);
-            currentPet = newPet;
-
-            try {
-                double dietCalInput = ((Number) dietCalField.getValue()).doubleValue();
-                currentPet.setNewDiet(dietCalInput);
-            } catch (NullPointerException e) {
-                System.out.println("no diet was inputted");
-            } finally {
-                petList.add(currentPet);
-                System.out.println("added new Pet");
-            }
-        } catch (NullPointerException e) {
-            System.out.println(e.getMessage());
-            JOptionPane.showMessageDialog(frame, "Entries don't meet requirements.");
-        }
-    }
-
-    //
-    //==============================================================
-    //edit pet
-    //
-    private void editPetEvent() {
-        try {
-            if (editPetTab == null) {
-                //other option: tabbedPane.indexOfTabComponent(editPetTab) == -1
-                editSelectedPet();
-            } else {
-                JOptionPane.showMessageDialog(frame, "You can only edit one pet at a time");
-            }
-        } catch (NullPointerException e) {
-            JOptionPane.showMessageDialog(frame, "No pets in profile currently. "
-                    + "Select \"Add New Pet\" to add a pet to this profile.");
-        }
-
-    }
-
-    /*
-    REQUIRES:
-    MODIFIES:
-    EFFECTS:
-     */
-    private void editSelectedPet() {
-        String name = petArrayList.get(index).getPetName();
-        System.out.println("edit pet" + index);
-        editPetTab = new JPanel();
-        currentPet = petArrayList.get(index);
-
-        setEditPetTabEditPane();
-        ActionListener editPetListener = editPetTabListener();
-        //editPetTab buttons
-        JButton savePetButton = new JButton("Okay");
-        JButton backButton = new JButton("Cancel");
-        savePetButton.addActionListener(editPetListener);
-        backButton.addActionListener(editPetListener);
-        //todomaybe, accessibility tool info
-//        weightLabel.setLabelFor(weightField);
-
-        //buttons panel, save or back
-        JPanel buttonPane = new JPanel(new GridLayout(1, 2));
-        buttonPane.add(savePetButton);
-        buttonPane.add(backButton);
-        buttonPane.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        //info panel - houses DeletePet button + other info in future
-        JPanel infoPane = new JPanel();
-        deletePetButton = new JButton("Delete this pet");
-        deletePetButton.addActionListener(editPetListener);
-        infoPane.add(deletePetButton);
-
-        //add panels to tab, labels on left, text fields on right
-//        editPetTab.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-//        editPetTab.setLayout();
-        editPetTab.add(editPane, BorderLayout.CENTER);
-        editPetTab.add(infoPane, BorderLayout.EAST);
-        editPetTab.add(buttonPane, BorderLayout.SOUTH);
-        tabbedPaneUI.addTab("Edit " + name, editPetTab);
-        tabbedPaneUI.setSelectedComponent(editPetTab);
-    }
-
-    //editPane labels
-    private void setEditPetTabEditPane() {
-        weightLabel = new JLabel("Weight (kg)");
-        nameLabel = new JLabel("Pet Name");
-        dietCalLabel = new JLabel("Diet Calories (kCal/kg)");
-
-        //editPane fields
-        decimalFormat = new DecimalFormat();
-        weightField = new JFormattedTextField(decimalFormat);
-        weightField.setValue(currentPet.getWeight());
-        nameField = new JTextField();
-        nameField.setText(currentPet.getPetName());
-        dietCalField = new JFormattedTextField(decimalFormat);
-        dietCalField.setValue(currentPet.getDietCalPerKg());
-
-        editPane = new JPanel();
-        editPane.setLayout(new GridLayout(3, 2));
-        editPane.add(nameLabel);
-        editPane.add(nameField);
-        editPane.add(weightLabel);
-        editPane.add(weightField);
-        editPane.add(dietCalLabel);
-        editPane.add(dietCalField);
-    }
-
-
-
-    private void closeEditTabEvent() {
-        System.out.println("close window");
-        tabbedPaneUI.remove(editPetTab);
-        editPetTab = null;
-        System.out.println(petList.getPetArray().get(index).getPetName());
-        updateMainDash();
-        frame.setVisible(true);
-    }
-
-    //
-    //
-    //==============================================================
-
-    //save session
-
-    //
-
-    private void saveSessionEvent() {
-        try {
-            updatePetList();
-            saveSession();
-        } catch (NullPointerException e) {
-            System.out.println("no pets in profiles");
-        }
-    }
-
-    private void saveSession() {
-        System.out.println("save session");
-        //todo later ask for Owner name when saving
-        try {
-            jsonWriter.open();
-            jsonWriter.write(petList);
-            jsonWriter.close();
-            System.out.println("Saved " + petList.getOwnerName() + "'s profile to " + JSON_STORE_URL);
-        } catch (FileNotFoundException e) {
-            System.out.println("Unable to write to file: " + JSON_STORE_URL);
-        }
-        System.out.println(petList.getPetArray().get(index).getPetName());
-    }
-
-    //
-    //==============================================================
-    //remove pet / exit profile
-
-    private void deletePetFromPetList() {
-        currentPet = petList.getPetArray().get(index);
-        petList.remove(currentPet);
-    }
-
-    private void exitProfileEvent() {
-        frame.setVisible(false);
-        frame = null;
-        introPaneUI = new JPanel();
-//        introPanel.add(new Tabs.IntroMenuPanel(introListener));
-//        frame.setContentPane(introPanel);
-        System.out.println("exited profile");
-        initializeFields();
-        initializeFrame();
-        System.out.println(tabbedPaneUI);
-    }
-
-    private void updatePetList() {
-        System.out.println("update pet list");
-        String newName = nameField.getText();
-        double weightInput = ((Number) weightField.getValue()).doubleValue();
-        double dietCalKg = ((Number) dietCalField.getValue()).doubleValue();
-
-        currentPet = petArrayList.get(index);
-        currentPet.setNewName(newName);
-        currentPet.setNewDiet(dietCalKg);
-        currentPet.setWeight(weightInput);
-        //update PetList, petArrayList, petJList
-    }
-
-    //todo later if no diet calories entered, display that instead of 0
-
-
-    private void updateMainDash() {
-        System.out.println("updating dash");
-        updateLeftPane();
-        updateRightPane();
-    }
-
-    private void updateLeftPane() {
-        petArrayList = petList.getPetArray();
-        petJList = toNamesJList(petArrayList);
-        petJList.addListSelectionListener(leftPaneSelectListener);
-        leftPane = new JScrollPane(petJList);
-        mainTabSplitPane.setLeftComponent(leftPane);
-    }
-
-
-    //default pic
-    //tododoc
-    private ImageIcon setDefaultPortraitImgIcon() {
-        ImageIcon imgFromURL = new ImageIcon(DEFAULT_PET_PORTRAIT_URL);
-        Image img = imgFromURL.getImage();
-        Image scaledImg = img.getScaledInstance(PORTRAIT_PIC_SIZE.width, PORTRAIT_PIC_SIZE.height, Image.SCALE_FAST);
-        ImageIcon imgIcon = new ImageIcon(scaledImg);
-        return imgIcon;
-    }
-
-    //tododoc
-    //todomaybe use SizeDisplayer to resize img
-    private void updateRightPane() {
-        JPanel displayPane = new JPanel();
-        displayPane.setLayout(new BoxLayout(displayPane, BoxLayout.Y_AXIS));
-        try {
-            currentPet = petArrayList.get(index);
-            if (currentPet.getPortraitPic() == "") {
-                ImageIcon imgIcon = setDefaultPortraitImgIcon();
-                JLabel portraitPic = new JLabel(imgIcon, SwingConstants.CENTER);
-                displayPane.add(portraitPic);
-            } //no else bc currently no functionality to add custom pic
-            displayPane.add(new JLabel("Selected Pet: " + currentPet.getPetName()));
-            displayPane.add(new JLabel("Weight (kg): " + currentPet.getWeight()));
-            displayPane.add(new JLabel("Current diet calories (KCal/kg): " + currentPet.getDietCalPerKg()));
-            mainTabSplitPane.setRightComponent(displayPane);
-        } catch (IndexOutOfBoundsException e) {
-            //change the right pane to default
-            //todo later abstract
-            System.out.println(e.getMessage());
-            System.out.println(index);
-            displayPane.add(new JLabel("No pet selected"));
-            mainTabSplitPane.setRightComponent(displayPane);
-        }
-    }
-
-
-
-    public void setJPanel(JPanel panel, Component component) {
-        panel.removeAll();
-        panel.add(component);
-    }
-
-
 
 }

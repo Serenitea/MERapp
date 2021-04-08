@@ -1,49 +1,6 @@
 
 # Pet Food Calculator
-###TODO:
 
-Keywords: set, Pane (areas inside a tab), tab, UI, create, add, new, intro, Listener
-
-Exception handling: 
-
-by event/button:
-- [ ] create new profile
-    - cases: null/no saved file, there is a saved file - same treatment
-    - set petList as a new instance of PetList
-    - set createNewProfilePane as new instance of NewProfilePanel
-    - set introPanel as createNewProfilePane
-    - set frame's contentPane to be introPanel and display the frame
-- [ ] load saved profile
-    - try setting petList from reading json file
-    - 
-- [ ] 
-
-locations
-
-- [ ] loadSavedProfile
-    - catch (IOException e)
-    - catch (JSONException e)
-- [ ] addNewToPetList()
-    - catch (NullPointerException e)
-    - catch (NullPointerException e)
-- [ ] editPetEvent()
-    - catch (NullPointerException e)
-    - if (editPetTab == null)  + else
-- [ ] editSelectedPet - 2 times .get(index)
-- [ ] closeEditWindowEvent .get(index)
-- [ ] saveSessionEvent() 
-    - catch (NullPointerException e)
-- [ ] saveSession() .get(index)
-    - catch (FileNotFoundException e)
-- [ ] removePetFromPetList() .get(index)
-- [ ] updatePetList() .get(index)
-- [ ] updateRightPane .get(index)
-    - catch (IndexOutOfBoundsException e)
-    - if (currentPet.getPortraitPic() == "")
-- [ ] initializeSplitPane() if (petArrayList.size() > 0) + else
-- [ ] mainMenuHeader() if (profileName == "") + else
-- [ ] Submit button in addPetListener, if (petList.getPetArray().size() == count + 1)
-- [ ] shorten fns
 
 ## Weight Management and Feeding Calculator for Cats & Dogs
 

@@ -35,7 +35,7 @@ public class Pet implements Writable {
         //this.mer = MERcalc.findMER(weightInKg);
         this.mer = 0;
         this.dietCalPerKg = 0;
-        this.portraitPic = "";
+        this.portraitPic = ""; //todolater put the default img URL here instead of GUI
     }
 
     //GETTERS
@@ -71,6 +71,7 @@ public class Pet implements Writable {
     public void setMER(double newMER) {
         this.mer = newMER;
     }
+
     public void setNewName(String newName) {
         this.petName = newName;
     }
