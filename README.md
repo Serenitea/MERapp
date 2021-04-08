@@ -33,15 +33,6 @@ and track their pet's weight progression over time. The obesity epidemic, affect
  - Youtube video: <a href="https://www.youtube.com/watch?v=CUmvVhGqaVQ"> Scale ImageIcon automatically to JLabel size </a>
  - Icon made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com </a>
 
- 
-### *Todo wishlist:*
- - more trait fields for pets - e.g. species, gender, neuter status lifestyle, body condition score, picture portrait
- - track a pet's current weight with an attached date
- - *feeding history*
- - *edit weight history*
- - *more options for diet caloric measurements - kcalPerCup, kcalPerCan*
- - *imperial measurement conversions*
- - *expand on diet traits - e.g. fields for brand, wet/dry, etc.*
- - *add the current diet's caloric count and output recommended feeding amount*
- - *need RER and MER calculation functions and possibly stored vars*
+##Phase 4: Task 2
+
 
