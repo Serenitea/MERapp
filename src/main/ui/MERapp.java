@@ -181,7 +181,7 @@ public class MERapp extends JFrame implements Runnable {
                     cancelCreateNewProfileEvent();
                     break;
                 case "Close App":
-                    confirmCloseAppEvent();
+                    confirmCloseAppIntroEvent();
                     break;
                 default:
                     JOptionPane.showMessageDialog(frame, "Unknown event");
@@ -190,17 +190,70 @@ public class MERapp extends JFrame implements Runnable {
         };
     }
 
+    /*
+    REQUIRES: frame and introPaneUI initialized
+    MODIFIES: this
+    EFFECTS: return to intro menu without creating new profile.
+     */
     private void cancelCreateNewProfileEvent() {
         setJPanel(introPaneUI, new Tabs.IntroMenuPane(introPaneUIListener));
         frame.setContentPane(introPaneUI);
         frame.setVisible(true);
     }
 
-    private void confirmCloseAppEvent() {
+    /*
+    REQUIRES: UI with a closeApp JButton instantiated
+    MODIFIES: this
+    EFFECTS: Exit confirmation dialog box initiated when user selects "Close App" button from introUI.
+     */
+    private void confirmCloseAppIntroEvent() {
+        int response;
+        response = JOptionPane.showConfirmDialog(null,
+                "Do you want to close this application?",
+                "Confirm Close Application",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+        switch (response) {
+            case JOptionPane.YES_OPTION: //close app
+                saveSessionEvent();
+                System.exit(0);
+                break;
+            case JOptionPane.NO_OPTION: //do nothing
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + response);
+        }
     }
 
     /*
-    REQUIRES:
+    REQUIRES: UI with a closeApp JButton instantiated
+    MODIFIES: this
+    EFFECTS: Exit confirmation dialog box initiated when user selects "Close App" button from introUI.
+     */
+    private void confirmCloseAppMainTabEvent() {
+        int response;
+        response = JOptionPane.showConfirmDialog(null,
+                "Do you want to save this session?",
+                "Confirm Close Application",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+        switch (response) {
+            case JOptionPane.YES_OPTION: //save and exit profile
+                saveSessionEvent();
+                System.exit(0);
+                break;
+            case JOptionPane.NO_OPTION: //exit without saving
+                System.exit(0);
+                break;
+            case JOptionPane.CANCEL_OPTION: //don't exit
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + response);
+        }
+    }
+
+    /*
+    REQUIRES: mainTab instantiated
     MODIFIES: this.mainTabListener
     EFFECTS: initializes an ActionListener for mainTab's JButtons
      */
@@ -221,7 +274,7 @@ public class MERapp extends JFrame implements Runnable {
                     confirmExitProfileEvent();
                     break;
                 case "Close App":
-                    confirmCloseAppEvent();
+                    confirmCloseAppMainTabEvent();
                     break;
                 default:
                     JOptionPane.showMessageDialog(frame, "Unknown event");
@@ -231,7 +284,7 @@ public class MERapp extends JFrame implements Runnable {
     }
 
     /*
-    REQUIRES: //toask would the existence of the JList be considered a requirement?
+    REQUIRES: petJList instantiated with >=1 pet name(s)
     MODIFIES: this.leftPaneSelectListener
     EFFECTS: initializes a ListSelectionListener. responds to single selection of the
              JList of pet names displayed in the leftPane of the mainTab's JSplitPane.
@@ -245,9 +298,8 @@ public class MERapp extends JFrame implements Runnable {
     }
 
     /*
-    REQUIRES:
-    MODIFIES:
-    EFFECTS:
+    REQUIRES: AddPetTab instantiated
+    EFFECTS: in AddPetTab, specifies functions called by different JButtons
      */
     public ActionListener addPetTabListener() {
         return new ActionListener() {
@@ -418,7 +470,7 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
                             + " to profile.");
             closeAddPetTabEvent(); //includes updating main dash
         } else {
-            System.out.println("creating a pet was unsuccessful"); //print
+            JOptionPane.showMessageDialog(frame, "creating a pet was unsuccessful");
         }
     }
 
@@ -510,9 +562,10 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
 
     //
     //==============================================================
-    //edit pet
+    //SCRIPTS
     //
 
+    //returns true if petList is empty
     private boolean petListIsEmpty() {
         return (petList.getPetArray().size() <= 0);
     }
@@ -539,9 +592,9 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
     }
 
     /*
-    REQUIRES:
-    MODIFIES:
-    EFFECTS:
+    REQUIRES: frame, tabbedPaneUI, mainTab and EditPetTab instantiated
+    MODIFIES: this
+    EFFECTS: closes the EditPetTab and returns user to main dashboard tab.
      */
     private void closeEditTabEvent() {
         System.out.println("close window"); //print
@@ -574,19 +627,6 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         }
     }
 
-//    private void saveSessionEvent() {
-//        System.out.println("save session"); //print
-//        try {
-//            jsonWriter.open();
-//            jsonWriter.write(petList);
-//            jsonWriter.close();
-//            JOptionPane.showMessageDialog(frame,
-//                    "Saved " + petList.getOwnerName() + "'s profile to " + JSON_STORE_URL);
-//        } catch (FileNotFoundException e) {
-//            System.out.println("Unable to write to file: " + JSON_STORE_URL); //print
-//        }
-//    }
-
     /*
     REQUIRES: EditPetTab instantiated.
     MODIFIES: petList
@@ -599,17 +639,14 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         JOptionPane.showMessageDialog(frame, String.format("Successfully removed %s from profile.", deletedPetName));
     }
 
-    //
-    //
     //==============================================================
     //save session
-
     //
 
     /*
     REQUIRES: petList is instantiated.
     MODIFIES: data.json
-    EFFECTS:
+    EFFECTS: Save confirmation pop-up dialog box, launched when user selects "Exit Profile"
      */
     private void confirmExitProfileEvent() {
         int response;
@@ -633,16 +670,25 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         }
     }
 
+    /*
+    REQUIRES: frame initialized
+    MODIFIES: this
+    EFFECTS: closes currently opened profile and restarts UI to the intro menu.
+     */
     private void exitProfileEvent() {
         frame.setVisible(false);
+        tabbedPaneUI = null;
         introPaneUI = new JPanel();
+        leftPane = null;
+        rightPane = null;
+        mainTabSplitPane = null;
         initFields();
         initFrame();
         initIntroUI();
     }
 
     /*
-    REQUIRES:
+    REQUIRES: editPetTab, petList instantiated
     MODIFIES: this
     EFFECTS: updates the edited pet and opened profile with user input.
      */
@@ -655,7 +701,7 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
 
     //
     //==============================================================
-    //remove pet / exit profile
+
 
     /*
     REQUIRES: leftPane and rightPane instantiated
@@ -671,9 +717,10 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
     }
 
     /*
-    REQUIRES:
-    MODIFIES:
-    EFFECTS:
+    REQUIRES: rightPane instantiated
+    MODIFIES: this.rightPane
+    EFFECTS: launches/resets rightPane with no pet displays.
+             will display msg for user to select a pet or that there are no pets to select.
      */
     private void emptyRightPane() {
         rightPane.removeAll();
@@ -706,8 +753,6 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
     private JPanel updateRightPane() {
         JPanel displayPane = new JPanel();
         displayPane.setLayout(new BoxLayout(displayPane, BoxLayout.Y_AXIS));
-
-
         currentPet = petArrayList.get(index);
 
         //portrait pic
@@ -823,8 +868,7 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
 
 
         /*
-        REQUIRES:
-        MODIFIES:
+        REQUIRES: weightInput instantiated
         EFFECTS: returns true if the input is a valid positive number.
         //value of 0 is allowed if the user doesn't know pet weight.
          */
@@ -1087,6 +1131,10 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
             this.addWithConstraints(buttonPane(actionListener), 3, 0, 3);
         }
 
+        /*
+        REQUIRES: ActionListener appropriately associated with the buttons
+        EFFECTS: creates JPanel with 2 JButtons: "close app", "exit profile"
+         */
         private JPanel buttonPane(ActionListener actionListener) {
             JPanel pane = new JPanel(new BorderLayout());
             JButton closeButton = Tabs.closeAppButton(actionListener);
@@ -1115,7 +1163,11 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
             return headerPanel;
         }
 
-        //tododoc
+        /*
+        REQUIRES: GridBagLayout instantiated
+        MODIFIES: this
+        EFFECTS: adds a Component to mainTab at positions specified by the given GridBagConstraints
+         */
         private void addWithConstraints(JComponent component, int gbcWidth, int gbcX, int gbcY) {
             gbc.gridwidth = gbcWidth;
             gbc.gridx = gbcX;

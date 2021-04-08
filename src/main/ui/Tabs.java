@@ -16,15 +16,12 @@ public class Tabs extends JComponent {
 //        super.setMinimumSize(new Dimension(WIDTH, HEIGHT));
     }
 
-
     //EFFECT: creates a JButton that will close the app when pressed.
     public static JButton closeAppButton(ActionListener actionListener) {
         JButton button = new JButton("Close App");
-        button.addActionListener(e -> System.exit(0));
+        button.addActionListener(actionListener);
         return button;
     }
-
-
 
 
     //REQUIRES: the GUI currently is displaying MainTab, and no other tabs are open.
