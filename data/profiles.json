@@ -1,17 +1,4 @@
 {
-    "pets": [
-        {
-            "weight": 20,
-            "MER": 0,
-            "Diet Caloric Content (KCal/kg)": 0,
-            "pet name": "woofles"
-        },
-        {
-            "weight": 22,
-            "MER": 0,
-            "Diet Caloric Content (KCal/kg)": 0,
-            "pet name": "22"
-        }
-    ],
+    "pets": [],
     "ownername": ""
 }

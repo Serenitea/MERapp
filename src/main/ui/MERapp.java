@@ -34,10 +34,9 @@ import static java.awt.GridBagConstraints.BOTH;
 //todo later formatting polish
 //todo later move edit pet button to pet display
 //todo if blank profile name should say "no profile name set"
+//todo later maybe - add duplicate check for editing pet as well?? naah
 //TODO  Warns user if they attempt to create a pet with a duplicate name (not case-sensitive)
-//TODO ?unsaved changes
-//TODO add confirm save: prompt to save session when exiting profile or close app from dash.
-// JDialog confirmation for closeapp and exitprofile
+//todo later ?unsaved changes
 //tofix dietCal saved properly
 
 public class MERapp extends JFrame implements Runnable {
@@ -89,13 +88,20 @@ public class MERapp extends JFrame implements Runnable {
     }
 
 
-
-
     //==============================================================
 
     // MODIFIES: this
     // EFFECTS: initializes the JSON reader and writer and attempts to read from the provided file URL.
     // also initializes the PetList and Pet ArrayList fields.
+
+    //EFFECTS: converts a Pet ArrayList to a ListModel of pet names as Strings
+    public static ListModel<String> toListModel(ArrayList<Pet> petArrayList) {
+        DefaultListModel<String> petListModel = new DefaultListModel<>();
+        for (Pet pet : petArrayList) {
+            petListModel.addElement(pet.getPetName());
+        }
+        return petListModel;
+    }
 
     /**
      * When an object implementing interface <code>Runnable</code> is used
@@ -130,6 +136,9 @@ public class MERapp extends JFrame implements Runnable {
         jsonWriter = new JsonWriter(JSON_STORE_URL);
     }
 
+    //==============================================================
+    //Listeners
+
     /*
     REQUIRES: valid image from static URL
     MODIFIES: this.frame, this.introPaneUI
@@ -144,11 +153,7 @@ public class MERapp extends JFrame implements Runnable {
         frame.setMinimumSize(MIN_FRAME_SIZE);
     }
 
-    //==============================================================
-    //Listeners
-
-
-
+    //to be based on num of tabs in tabbedpaneUI
 
     private void initIntroUI() {
         initIntroListener();
@@ -156,8 +161,6 @@ public class MERapp extends JFrame implements Runnable {
         frame.getContentPane().add(introPaneUI);
         frame.setVisible(true);
     }
-    //todo later change the circumstance for preventing more open tabs
-    //to be based on num of tabs in tabbedpaneUI
 
     /*
     MODIFIES: this.introPaneUIListener
@@ -215,7 +218,6 @@ public class MERapp extends JFrame implements Runnable {
                 JOptionPane.QUESTION_MESSAGE);
         switch (response) {
             case JOptionPane.YES_OPTION: //close app
-                saveSessionEvent();
                 System.exit(0);
                 break;
             case JOptionPane.NO_OPTION: //do nothing
@@ -297,6 +299,10 @@ public class MERapp extends JFrame implements Runnable {
         };
     }
 
+    //==============================================================
+//beyond the initial intro panel - main menu
+    //going to main menu
+
     /*
     REQUIRES: AddPetTab instantiated
     EFFECTS: in AddPetTab, specifies functions called by different JButtons
@@ -319,10 +325,6 @@ public class MERapp extends JFrame implements Runnable {
             }
         };
     }
-
-    //==============================================================
-//beyond the initial intro panel - main menu
-    //going to main menu
 
     /*
     REQUIRES: assigned to appropriate JButtons of editPetTabListener
@@ -401,6 +403,12 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         }
     }
 
+    //
+    //==============================================================
+    //add profile
+    //
+    //todo later able to have multiple profiles (can add or remove)
+
     /*
     REQUIRES: these fields instantiated: petList, petArrayList mainTabListener, leftPaneSelectListener, mainTabSplitPane
     MODIFIES: this.mainTab
@@ -415,12 +423,6 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         tabs.addTab("Main Dashboard", mainTab);
         return tabs;
     }
-
-    //
-    //==============================================================
-    //add profile
-    //
-    //todo later able to have multiple profiles (can add or remove)
 
     /*
     REQUIRES: petList and petArrayList instantiated
@@ -454,6 +456,11 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
 
     }
 
+    //
+    //==============================================================
+    //add pet
+    //
+
     /*
     REQUIRES:
     MODIFIES:
@@ -462,7 +469,7 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
      */
     private void createNewPetEvent() {
         int count = petList.getPetArray().size();
-        submitAddNewPetTab(); //todo later warning for creating a pet with a duplicate name
+        submitAddNewPetTab(); //TODO warning for creating a pet with a duplicate name
         if (petList.getPetArray().size() == count + 1) {
             JOptionPane.showMessageDialog(frame,
                     "Successfully added "
@@ -474,15 +481,10 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         }
     }
 
-    //
-    //==============================================================
-    //add pet
-    //
-
     /*
-    REQUIRES:
-    MODIFIES:
-    EFFECTS:
+    REQUIRES: tabbedPaneUI instantiated
+    MODIFIES: this
+    EFFECTS: creates new AddNewPetTab instance if there's no current instance.
      */
     private void addNewPetTabEvent() {
         if (!(addPetTab == null)) {
@@ -514,8 +516,8 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
     /*
     REQUIRES: addPetTab is instantiated
     MODIFIES: this.petList
-    EFFECTS: add a newly created Pet object to petList (the opened profile)
-             if inputs are valid, otherwise will display msg that create pet failed.
+    EFFECTS: try creating a Pet from user input. if inputs are invalid, will display failed msg.
+              if Pet has been created, call function to check for duplicate names
      */
     private void submitAddNewPetTab() {
         System.out.println("adding new pet to pet list"); //print
@@ -528,9 +530,44 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
                     + " number. Please input 0 if you don't know your"
                     + " pet's weight.");
         } else {
+            checkDuplicateName();
+        }
+    }
+
+    /*
+    REQUIRES: currentPet and petList instantiated
+    MODIFIES: this.petList
+    EFFECTS: checks the newly created pet's name against other
+             pet names in this profile for duplicate names (not case sensitive).
+             if duplicate is found, Show warning dialog.
+     */
+    private void checkDuplicateName() throws IllegalStateException {
+        if (petList.duplicateName(currentPet.getPetName())) {
+            int response = JOptionPane.showConfirmDialog(null,
+                    "There's already a pet with that name! Do you still want to proceed and create this pet?",
+                    "Duplicate name found",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+            switch (response) {
+                case JOptionPane.YES_OPTION:
+                    petList.add(currentPet);
+                    break;
+                case JOptionPane.NO_OPTION:
+//                    submitAddNewPetTab();
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected value: " + response);
+
+            }
+        } else {
             petList.add(currentPet);
         }
     }
+
+    //
+    //==============================================================
+    //SCRIPTS
+    //
 
     /*
     REQUIRES:
@@ -559,11 +596,6 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
             }
         }
     }
-
-    //
-    //==============================================================
-    //SCRIPTS
-    //
 
     //returns true if petList is empty
     private boolean petListIsEmpty() {
@@ -627,6 +659,10 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         }
     }
 
+    //==============================================================
+    //save session
+    //
+
     /*
     REQUIRES: EditPetTab instantiated.
     MODIFIES: petList
@@ -638,10 +674,6 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         petList.remove(currentPet);
         JOptionPane.showMessageDialog(frame, String.format("Successfully removed %s from profile.", deletedPetName));
     }
-
-    //==============================================================
-    //save session
-    //
 
     /*
     REQUIRES: petList is instantiated.
@@ -687,6 +719,9 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         initIntroUI();
     }
 
+    //
+    //==============================================================
+
     /*
     REQUIRES: editPetTab, petList instantiated
     MODIFIES: this
@@ -698,10 +733,6 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         petList.getPetArray().set(index, currentPet);
         System.out.println("update pet list"); //print
     }
-
-    //
-    //==============================================================
-
 
     /*
     REQUIRES: leftPane and rightPane instantiated
@@ -791,25 +822,18 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         return petNameJList;
     }
 
-    //EFFECTS: converts a Pet ArrayList to a ListModel of pet names as Strings
-    public static ListModel<String> toListModel(ArrayList<Pet> petArrayList) {
-        DefaultListModel<String> petListModel = new DefaultListModel<>();
-        for (Pet pet : petArrayList) {
-            petListModel.addElement(pet.getPetName());
-        }
-        return petListModel;
-    }
-
     //creates and runs the UI tab for creating adding a new pet
     //user may input and submit pet traits into text fields to create new pet
     //user may also cancel pet creation by the "cancel" JButton
     public static class AddNewPetTab extends JPanel {
+        private final NumberFormat decimalFormat = new DecimalFormat();
+        private final JLabel instructionLabel = new JLabel("Please enter your pet's information below",
+                SwingConstants.CENTER);
         ActionListener addPetListener;
         JButton createPetButton;
         JButton backButton;
         JPanel buttonPane;
         private JPanel createNewPetInputPane;
-        private final NumberFormat decimalFormat = new DecimalFormat();
         //        private NumberFormat decimalFormat = new DecimalFormat("PositivePattern");
         private JLabel weightLabel;
         private JFormattedTextField weightField;
@@ -817,8 +841,6 @@ EFFECTS: instantiates the main profile UI and set visible in JFrame.
         private JFormattedTextField dietCalField;
         private JLabel nameLabel;
         private JLabel dietCalLabel;
-        private final JLabel instructionLabel = new JLabel("Please enter your pet's information below",
-                SwingConstants.CENTER);
         private double weightInput;
         private String nameInput;
         private double dietCalInput;
