@@ -48,3 +48,27 @@ The implementing classes share common methods reflecting the basic features requ
  - valid____Input(): where ____ indicates a Pet trait, currently Name, Weight, and Diet Caloric Content.
  Boolean indicating whether the pet trait for that input is a valid entry.
 
+##Phase 4: Task 3
+The GUI was much harder to implement than previous tasks: the increased complexity highlighted the critical importance
+of preplanning. I had a good idea of what classes and methods I needed to implement
+Part of the reason for this is simply unfamiliarity with Java classes, particularly Swing. 
+Initially, the most pressing concern was to implement a working program. 
+
+I attempted to begin with custom clases and subclasses. However, I was constantly changing basic properties of the 
+class as I needed, and I had an extremely difficult time implementing the most complex UI interface, 
+the main dashboard. I resorted to adding necessary features using methods instead of using custom classes.
+As the program grew more complicated. It also became buggier and more complicated to debug, and unexpected
+interactions between features and their exceptions occured. 
+I had to go through the application and write out the expected state of the app, 
+what the possible combinations of outcomes are, and the expected logic of the app. 
+Going through the app state by state was tedious but made the app cleaner and more robust.
+
+After every feature was implemented and debugged, I was able to extract each tab as a custom class, 
+though the resulting organization is still flawed. If I had more time, I would further organize the random collection of
+interface components, found in ContentComponent and scattered throughout MERapp, into a custom Class 
+or nested within the appropriate classes.
+
+In the future I will likely focus more on planning out the state changes, events, and data flow before 
+seriously considering type hierarchy organization. I would likely start by planning and writing down the 
+explicit details of desired events and states before starting to write code. While this was obviously the sole
+purpose of CPSC110, systematic program design with explicit planning seems even more essential to OOP.
