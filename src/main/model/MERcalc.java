@@ -8,13 +8,12 @@ public class MERcalc {
     private static final double TEMP_FACTOR = 1.6;
 
     public MERcalc() {
-        this.factor = TEMP_FACTOR;
     }
 
     /*
     EFFECTS: returns a pet's RER given weight in kg. RER = 70*(wt^0.75)
      */
-    public static double calcRER(double weight) {
+    private static double calcRER(double weight) {
         double powCalc = Math.pow(weight, 0.75);
         return 70 * powCalc;
     }
@@ -22,9 +21,18 @@ public class MERcalc {
     /*
     EFFECTS: returns a pet's MER given the weight in kg and a nutritional factor (usually between 0.6 to 5)
      */
-    public static double findMER(double weight, double factor) {
+    public static double calcMER(double weight, double factor) {
         double rer = calcRER(weight);
         return factor * rer;
+    }
+
+    /*
+    overloaded method
+    EFFECTS: returns a pet's MER given the weight in kg and the default nutritional factor 1.6
+     */
+    public static double calcMER(double weight) {
+        double rer = calcRER(weight);
+        return 1.6 * rer;
     }
 
     /*

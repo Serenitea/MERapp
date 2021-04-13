@@ -1,5 +1,6 @@
 package ui;
 
+import model.MERcalc;
 import model.Pet;
 import model.PetList;
 import persistence.JsonReader;
@@ -12,10 +13,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import static java.lang.System.*;
+import static java.lang.System.exit;
+import static java.lang.System.out;
 
 // Pet Calorie Calculator application
 //
@@ -38,11 +41,11 @@ import static java.lang.System.*;
 //todo later add option to edit owner name
 
 public class MERapp extends JFrame implements Runnable {
-    public static final int FRAME_WIDTH = 450;
-    public static final int FRAME_HEIGHT = 400;
-    public static final Dimension MIN_FRAME_SIZE = new Dimension(450, 400);
+    public static final int FRAME_WIDTH = 400;
+    public static final int FRAME_HEIGHT = 600;
+    public static final Dimension MIN_FRAME_SIZE = new Dimension(450, 300);
     private static final Dimension PORTRAIT_PIC_SIZE = new Dimension(75, 75);
-
+    private static Dimension RIGHT_PANE_SIZE = new Dimension(300, 300);
     private static final String JSON_STORE_URL = "./data/profiles.json"; //normal
     //        private static final String JSON_STORE_URL = "./data/test.json"; //empty case for testing
 //        private static final String JSON_STORE_URL = "./data/fail.json"; //no such file case for
@@ -71,6 +74,7 @@ public class MERapp extends JFrame implements Runnable {
     private JSplitPane mainTabSplitPane;
     private JTabbedPane tabbedPaneUI;
     private Tab.EditPetTab editPetTab;
+
 
 
     //==============================================================
@@ -435,10 +439,13 @@ public class MERapp extends JFrame implements Runnable {
         petJList = toNamesJList(arrayList);
         petJList.addListSelectionListener(leftPaneSelectListener);
         mainTabSplitPane = new JSplitPane();
+        mainTabSplitPane.setMinimumSize(MIN_FRAME_SIZE);
         rightPane = new JPanel();
+        rightPane.setPreferredSize(RIGHT_PANE_SIZE);
         leftPane = new JScrollPane(petJList);
         mainTabSplitPane.setLeftComponent(leftPane);
         mainTabSplitPane.setRightComponent(rightPane);
+        mainTabSplitPane.setDividerLocation(0.4);
         emptyRightPane();
     }
 
@@ -773,6 +780,7 @@ public class MERapp extends JFrame implements Runnable {
         petJList.addListSelectionListener(leftPaneSelectListener);
         leftPane = new JScrollPane(petJList);
         mainTabSplitPane.setLeftComponent(leftPane);
+        mainTabSplitPane.setDividerLocation(0.3);
     }
 
     /*
@@ -786,14 +794,21 @@ public class MERapp extends JFrame implements Runnable {
         displayPane.setLayout(new BoxLayout(displayPane, BoxLayout.Y_AXIS));
         currentPet = petArrayList.get(index);
 
-        //portrait pic
+        //default portrait pic
         ImageIcon imgIcon = setDefaultPortraitImgIcon();
         JLabel portraitPic = new JLabel(imgIcon, SwingConstants.CENTER);
         displayPane.add(portraitPic);
         displayPane.add(new JLabel("Selected Pet: " + currentPet.getPetName()));
         displayPane.add(new JLabel("Weight (kg): " + currentPet.getWeight()));
-        displayPane.add(new JLabel("Current diet calories (KCal/kg): " + currentPet.getDietCalPerKg()));
+        displayPane.add(new JLabel("Current diet calories: " + currentPet.getDietCalPerKg() + " KCal/kg"));
+        DecimalFormat df = new DecimalFormat("0.0");
+        Double mer = MERcalc.calcMER(currentPet.getWeight());
+
+        String merString = df.format(mer).toString();
+        displayPane.add(new JLabel("Daily recommended feeding amount: "));
+        displayPane.add(new JLabel(merString + " g"));
         mainTabSplitPane.setRightComponent(displayPane);
+        mainTabSplitPane.setDividerLocation(0.3);
         return displayPane;
     }
 

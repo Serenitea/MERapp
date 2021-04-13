@@ -19,7 +19,7 @@ public class uiTesting {
     private static final String EMPTY_URL = "./data/test.json"; //empty case
     private ArrayList<Pet> petArrayList;
     private JsonReader jsonReader;
-    private JTextField testTextField = new JTextField();
+    private final JTextField testTextField = new JTextField();
 
 
     @Test

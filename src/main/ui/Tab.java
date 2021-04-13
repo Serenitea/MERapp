@@ -193,7 +193,7 @@ public abstract class Tab extends JPanel {
         GridBagConstraints gbc;
         JButton newPetButton = new JButton("Add New Pet");
         JButton editPetButton = new JButton("Edit a Pet");
-        JButton savePetButton = new JButton("Save Session");
+        JButton saveSessionButton = new JButton("Save Session");
         ListModel<String> petListModel;
 
         /*
@@ -212,7 +212,7 @@ public abstract class Tab extends JPanel {
             this.actionListener = actionListener;
             newPetButton.addActionListener(actionListener);
             editPetButton.addActionListener(actionListener);
-            savePetButton.addActionListener(actionListener);
+            saveSessionButton.addActionListener(actionListener);
         }
 
         public void getPane() {
@@ -225,7 +225,7 @@ public abstract class Tab extends JPanel {
             this.addWithConstraints(splitPanePetsPanel, 3, 0, 1);
             this.addWithConstraints(newPetButton, 1, 0, 2);
             this.addWithConstraints(editPetButton, 1, 1, 2);
-            this.addWithConstraints(savePetButton, 1, 2, 2);
+            this.addWithConstraints(saveSessionButton, 1, 2, 2);
             this.addWithConstraints(buttonPane(actionListener), 3, 0, 3);
         }
 
